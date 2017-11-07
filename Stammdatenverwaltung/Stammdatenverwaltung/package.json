@@ -1,9 +1,9 @@
 {
-  "name": "stammdatenverwaltung",
-  "version": "0.0.0",
-  "description": "Stammdatenverwaltung",
-  "main": "app.js",
   "author": {
-    "name": "Peri"
-  }
+    "name": "Philipp"
+  },
+  "description": "Auth",
+  "main": "server.js",
+  "name": "node-token-jwt",
+  "version": "0.0.0"
 }
