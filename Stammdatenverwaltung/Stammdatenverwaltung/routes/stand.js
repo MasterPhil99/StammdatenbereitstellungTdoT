@@ -4,29 +4,41 @@ var router = express.Router();
 router.get('/', function(req, res, next) {
     //res.send('list of all stands');
     console.log(req.baseURL);
-    req.db.collection('stand').find({}, {_id: 0,id:1,name: 1}).toArray(function(err, results) {
-        for (var item in results) {
-            results[item].link = req.baseURL+"/stand/"+results[item].id
-        }
-        res.send(results);
-    });
+    var pName = req.query.name;
+    if (pName != null) {
+        req.db.collection('stands').find({ name: pName }).toArray(function (err, result) {
+            for (var item in results) {
+                results[item].id = results[item]._id;
+                results[item].link = req.baseURL + "/stand/" + results[item].id;
+            }
+            res.send(results);
+        });
+    }
+    else {
+        req.db.collection('stands').find({}, { _id: 1, name: 1 }).toArray(function (err, results) {
+            for (var item in results) {
+                results[item].id = results[item]._id;
+                results[item].link = req.baseURL + "/stand/" + results[item].id;
+            }
+            res.send(results);
+        });
+    }
 });
 
 router.get('/:id', function (req, res, next) {
-
     //res.send('list of one stand');
     var id = req.params.id;
-    req.db.collection('stand').find({"id": id},{_id:0}).toArray(function(err, results) {
+    req.db.collection('stands').find({"_id": id}).toArray(function(err, results) {
         console.log(results);
         for (var item in results) {
             results[item].link = req.baseURL+"/stand";
         }
-
+        
         res.send(results);
     });
 });
 
-router.get('/:id/students',function(req, res, next) {
+router.get('/:id/student',function(req, res, next) {
     res.send('list of students in this stand');
 });
 
@@ -37,7 +49,7 @@ router.get('/:id/teacher',function(req, res, next) {
 router.post('/',function (req,res,next) {
  //   res.send('update the stand');
     var stand = req.body;
-    req.db.collection('stand').update(
+    req.db.collection('stands').update(
         {id:stand.id},stand
     )
 });
