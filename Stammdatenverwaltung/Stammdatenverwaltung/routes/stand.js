@@ -57,7 +57,7 @@ router.post('/',function (req,res,next) {
 router.put('/',function (req,res,next) {
     //res.send('add a new stand, return stand obj with id');
     var stand = req.body;
-    stand.id = guid();
+    stand._id = guid();
     req.db.collection('stand').insert( stand );
     res.send(stand);
 });
