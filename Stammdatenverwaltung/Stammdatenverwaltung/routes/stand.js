@@ -3,10 +3,10 @@ var router = express.Router();
 
 router.get('/', function(req, res, next) {
     //res.send('list of all stands');
-    console.log(req.baseURL);
+    //console.log(req.baseURL);
     var pName = req.query.name;
     if (pName != null) {
-        req.db.collection('stands').find({ name: pName }).toArray(function (err, result) {
+        req.db.collection('stands').find({ name: pName }).toArray(function (err, results) {
             for (var item in results) {
                 results[item].id = results[item]._id;
                 results[item].link = req.baseURL + "/stand/" + results[item].id;
@@ -50,15 +50,18 @@ router.post('/',function (req,res,next) {
  //   res.send('update the stand');
     var stand = req.body;
     req.db.collection('stands').update(
-        {id:stand.id},stand
+        {_id:stand.id},stand
     )
 });
 
 router.put('/',function (req,res,next) {
     //res.send('add a new stand, return stand obj with id');
     var stand = req.body;
-    stand._id = guid();
-    req.db.collection('stand').insert( stand );
+    //stand._id = guid();
+    req.db.collection('stands').insertOne(stand, function (err, res) {
+        if (err) throw err;
+        console.log("1 document inserted '" + stand.name + "'");
+    });
     res.send(stand);
 });
 
