@@ -12,6 +12,7 @@ var index = require('./routes/index');
 var student = require('./routes/student');
 var stand = require('./routes/stand');
 var teacher = require('./routes/teacher');
+var login = require('./routes/login');
 
 var db;
 
@@ -56,7 +57,8 @@ app.use(function (req, res, next) {
 app.use('/', index);
 app.use('/student',student);
 app.use('/teacher',teacher);
-app.use('/stand',stand);
+app.use('/stand', stand);
+app.use('/login', login);
 
 
 // catch 404 and forward to error handler
