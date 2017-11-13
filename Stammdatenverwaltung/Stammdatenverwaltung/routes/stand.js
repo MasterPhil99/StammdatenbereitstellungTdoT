@@ -84,8 +84,8 @@ router.post('/', function (req, res, next) {
                 var cat = doc[0].category;
                 if (cat == "teacher" || cat == "admin") { //later change this to if it is the responsible teacher or a teacher at that stand
                     if (stand.name != undefined && stand.name != "") { //check multiple attributes later
-                        stand._id = stand.id;
-                        req.db.collection('stands').update({ _id: stand.id }, stand);
+                        stand._id = stand.id; //check id
+                        req.db.collection('stands').update({ _id: stand.id }, stand); //doesnt really update?
                         res.send(stand);
                     }
                     else {
