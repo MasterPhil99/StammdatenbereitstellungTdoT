@@ -31,13 +31,6 @@ app.set('view engine', 'jade');
 app.set('json spaces', 40);
 
 
-app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header('Access-Control-Allow-Methods', 'DELETE, PUT, GET, POST');
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
-});
-
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
