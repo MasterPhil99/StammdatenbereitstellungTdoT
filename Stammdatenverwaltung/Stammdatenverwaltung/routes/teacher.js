@@ -27,7 +27,7 @@ router.put('/',function (req, res, next) {
                 var cat = doc[0].category;
                 if (cat == "teacher" || cat == "admin") {
                     if ((typeof teacher.name != undefined && teacher.name != "") && (typeof teacher.password != undefined && teacher.password != "")) { //check multiple attributes later
-                        //add teacher to database?
+                        //add teacher to database? or check smth else first? cant think straight rn
                     }
                     else {
                         res.status(400);

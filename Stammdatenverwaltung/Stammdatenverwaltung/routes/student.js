@@ -13,6 +13,7 @@ router.get('/', function(req, res, next) {
     var fnFlag = false;
     var pClass = req.query.class;
     var cFlag = false;
+    
 
     if (pLastName != null && pLastName != undefined) {
         lnFlag = true;
@@ -28,7 +29,7 @@ router.get('/', function(req, res, next) {
 
     if (lnFlag || fnFlag || cFlag) {
         //filter after the available parameters
-        req.db.collection('students').find({ lastname: pLastName }).toArray(function (err, results) {
+        req.db.collection('users').find({ lastname: pLastName, category: 'student' }, { password: 0 }).toArray(function (err, results) {
             if (typeof results == undefined || results.length <= 0) {
                 res.status(404);
                 res.send('Student not found!');
@@ -42,7 +43,7 @@ router.get('/', function(req, res, next) {
         });
     }
     else {
-        req.db.collection('students').find({}, { _id: 1, class: 1, lastname: 1}).toArray(function (err, results) {
+        req.db.collection('users').find({ category: 'student'}, { _id: 1, class: 1, lastname: 1}).toArray(function (err, results) {
             if (typeof results == undefined || results.length <= 0) {
                 res.status(404);
                 res.send('Student not found!');
@@ -62,7 +63,7 @@ router.get('/:id', function (req, res, next) {
     try {
         var id = new mongo.ObjectID(req.params.id);
 
-        req.db.collection('students').find({ _id: id }).toArray(function (err, results) {
+        req.db.collection('users').find({ _id: id, category: 'student' }, { password: 0, category:0 }).toArray(function (err, results) {
             if (typeof results != undefined && results.length > 0 && results[0] != undefined) {
                 console.log(results);
                 results[0].link = req.baseURL + "/student";
