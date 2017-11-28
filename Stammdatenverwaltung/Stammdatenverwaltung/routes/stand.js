@@ -8,20 +8,30 @@ router.get('/', function(req, res, next) {
     var pName = req.query.name;
     if (pName != null) {
         req.db.collection('stands').find({ name: pName }).toArray(function (err, results) {
-            for (var item in results) {
-                results[item].id = results[item]._id;
-                results[item].link = req.baseURL + "/stand/" + results[item].id;
+            if (typeof results != undefined && results.length > 0 && typeof results[0] != undefined) {
+                for (var item in results) {
+                    results[item].id = results[item]._id;
+                    results[item].link = req.baseURL + "/stand/" + results[item].id;
+                }
+                res.send(results);
+            } else {
+                res.status(404);
+                res.send("Stand not found!");
             }
-            res.send(results);
         });
     }
     else {
         req.db.collection('stands').find({}, { _id: 1, name: 1 }).toArray(function (err, results) {
-            for (var item in results) {
-                results[item].id = results[item]._id;
-                results[item].link = req.baseURL + "/stand/" + results[item].id;
+            if (typeof results != undefined && results.length > 0 && typeof results[0] != undefined) {
+                for (var item in results) {
+                    results[item].id = results[item]._id;
+                    results[item].link = req.baseURL + "/stand/" + results[item].id;
+                }
+                res.send(results);
+            } else {
+                res.status(404);
+                res.send("No Stand exists!");
             }
-            res.send(results);
         });
     }
 });
@@ -30,9 +40,9 @@ router.get('/:id', function (req, res, next) {
     //res.send('list of one stand');
     //no need to check authorization -> everyone can see the stands
     try {
-        var id = new mongo.ObjectID(req.params.id); //check id first!!!
+        var id = new mongo.ObjectID(req.params.id);
         req.db.collection('stands').find({ _id: id }).toArray(function (err, results) {
-            if (results != undefined && results.length > 0 && results != undefined) {
+            if (typeof results != undefined && results.length > 0 && typeof results[0] != undefined) {
                 console.log(results);
                 results[0].link = req.baseURL + "/stand";
 
@@ -67,7 +77,7 @@ function checkHeaderAndCookie(header, cookie) {
         }
     } else {
         req.db.collection('UUIDExpiry').find({ uuid: cookie }).toArray(function (err, resu) {
-            if (resu[0] != undefined) {
+            if (typeof resu != undefined && typeof resu[0] != undefined) {
                 uuid = cookie;
             } else {
                 uuid = -1;
@@ -90,7 +100,7 @@ router.post('/', function (req, res, next) {
         res.send("You need to be logged in to use this feature!");
     } else {
         req.db.collection('users').find({ uuid: uuid }).toArray(function (err, doc) {
-            if (doc[0] != undefined || doc.length > 0) {
+            if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
                 var cat = doc[0].category;
                 if (cat == "teacher" || cat == "admin") { //later change this to if it is the responsible teacher or a teacher at that stand
                     if (stand.name != undefined && stand.name != "") { //check multiple attributes later
@@ -127,13 +137,20 @@ router.put('/', function (req, res, next) {
         res.send("You need to be logged in to use this feature!");
     } else {
         req.db.collection('users').find({ uuid: uuid }).toArray(function (err, doc) {
-            if (doc[0] != undefined || doc.length > 0) {
+            if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
                 var cat = doc[0].category;
                 if (cat == "teacher" || cat == "admin") {
-                    if (stand.name != undefined && stand.name != "") { //check multiple attributes later
+                    if (typeof stand.name != undefined && stand.name != "") { //check multiple attributes later
                         req.db.collection('stands').find({ name: stand.name }).toArray(function (err, resu) {
                             console.log(resu);
                             if (resu.length <= 0 || resu == undefined) {
+                                if (typeof stand.assigned == undefined) {
+                                    //copy stand and give a stand with the entire object of assigned or students etc
+                                    //JSON.parse(JSON.stringify(...))
+                                    //write the one with only the ids into the database
+                                    stand.assigned = doc._id;
+                                }
+
                                 req.db.collection('stands').insertOne(stand, function (err, result) {
                                     console.log("1 stand inserted '" + stand.name + "'");
                                     stand.id = stand._id;

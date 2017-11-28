@@ -12,12 +12,12 @@ router.get('/', function (req, res, next) {
     }
     else {
         req.db.collection('users').find({ username: uName }).toArray(function (err, doc) {
-            if (doc != undefined || doc.length > 0) {
+            if (typeof doc != undefined || doc.length > 0) {
                 req.db.collection('users').find({ username: uName, password: uPwd }).toArray(function (err, result) {
-                    if (result != undefined || result.length > 0) {
+                    if (typeof result != undefined || result.length > 0) {
                         var expiryTime = 90000;
                         var uuid = getUuid();
-                        if (result[0].uuid == undefined || result[0].uuid == "") {
+                        if (typeof result[0].uuid == undefined || result[0].uuid == "") {
                             res.cookie('uuid', uuid, { maxAge: expiryTime, httpOnly: true });
                                 
                             var newUser = JSON.parse(JSON.stringify(result[0]));
