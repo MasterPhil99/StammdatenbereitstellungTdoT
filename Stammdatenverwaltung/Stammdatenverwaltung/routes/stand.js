@@ -29,13 +29,23 @@ router.get('/', function(req, res, next) {
 router.get('/:id', function (req, res, next) {
     //res.send('list of one stand');
     //no need to check authorization -> everyone can see the stands
-    var id = new mongo.ObjectID(req.params.id);
-    req.db.collection('stands').find({ _id: id}).toArray(function(err, results) {
-        console.log(results);
-        results[0].link = req.baseURL+"/stand";
-        
-        res.send(results);
-    });
+    try {
+        var id = new mongo.ObjectID(req.params.id); //check id first!!!
+        req.db.collection('stands').find({ _id: id }).toArray(function (err, results) {
+            if (results != undefined && results.length > 0 && results != undefined) {
+                console.log(results);
+                results[0].link = req.baseURL + "/stand";
+
+                res.send(results);
+            } else {
+                res.status(404);
+                res.send("Stand not found!");
+            }
+        });
+    } catch (err) {
+        res.status(400);
+        res.send("Invalid ID! " + err.message);
+    }
 });
 
 router.get('/:id/student',function(req, res, next) {

@@ -25,7 +25,8 @@ MongoClient.connect(url, function(err, db) {
 	var students = [
 	{ class: '4AHIFS', lastname: 'BABIN', firstname: 'Angelika', birthdate: '09.03.1999' },
 	{ class: '4AHIFS', lastname: 'BERI?A', firstname: 'Valon', birthdate: '01.11.1998' },
-	{ class: '4AHIFS', lastname: 'BLASCHKE', firstname: 'Julian', birthdate: '25.10.1999' }
+	{ class: '4AHIFS', lastname: 'BLASCHKE', firstname: 'Julian', birthdate: '25.10.1999' },
+	{ class: '4AHIFS', lastname: 'BLASCHKE', firstname: 'ABC', birthdate: '25.10.1998' }
 	];
 	var users = [
 	{ username: 'teach', password: 'TeachHash', category: 'teacher' },
