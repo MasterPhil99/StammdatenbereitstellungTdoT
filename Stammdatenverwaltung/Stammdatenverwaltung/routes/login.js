@@ -1,6 +1,43 @@
 ﻿var express = require('express');
 var router = express.Router();
 
+var ActiveDirectory = require('activedirectory');
+var config = {
+    url: 'ldap:\\minerva.htl-vil.local:636',
+    baseDN: 'dc=htl-vil,dc=local[:636]',
+    username: 'username@domain.com',
+    password: 'password'
+}
+var ad = new ActiveDirectory(config);
+
+//'der gesamte string in einem: LDAP:\\minerva.htl-vil.local/ou=Users,dc=htl-vil,dc=local[:Port] wobei der optionale Port 636 (SSL) oder 389 ist
+
+router.get('/', function (req, res, next) {
+    var uName = req.headers['username'];
+    var uPwd = req.headers['password'];
+
+    if (uName == undefined || uPwd == undefined) {
+        res.status(400);
+        res.send("Bad Request! Username and Password must be defined!");
+    }
+    else {
+        ad.authenticate(uName, uPwd, function (err, auth) {
+            if (err) {
+                console.log('ERROR: ' + JSON.stringify(err));
+                return;
+            }
+
+            if (auth) {
+                console.log('Authenticated!');
+            }
+            else {
+                console.log('Authentication failed!');
+            }
+        });
+    }
+});
+
+/*
 router.get('/', function (req, res, next) {
     //res.send('login');
     var uName = req.headers['username'];
@@ -47,7 +84,7 @@ router.get('/', function (req, res, next) {
             }
         });
     }
-});
+});*/
 
 function getUuid() {
     function s4() {

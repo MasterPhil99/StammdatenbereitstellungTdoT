@@ -95,6 +95,7 @@ router.post('/', function (req, res, next) {
     var head = req.headers['uuid'];
     var uuid = checkHeaderAndCookie(head, cookie);
 
+    
     if (uuid == -1) {
         res.status(401);
         res.send("You need to be logged in to use this feature!");
@@ -102,11 +103,31 @@ router.post('/', function (req, res, next) {
         req.db.collection('users').find({ uuid: uuid }).toArray(function (err, doc) {
             if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
                 var cat = doc[0].category;
-                if (cat == "teacher" || cat == "admin") { //later change this to if it is the responsible teacher or a teacher at that stand
-                    if (stand.name != undefined && stand.name != "") { //check multiple attributes later
-                        stand._id = stand.id; //check id
-                        req.db.collection('stands').update({ _id: stand.id }, stand); //doesnt really update?
-                        res.send(stand);
+                if (cat == "teacher" || cat == "admin") { //maybe use assigned teacher
+                    if (stand.name != undefined && stand.name != "") {
+                        try {
+                            req.db.collection('stands').updateOne({ "_id": mongo.ObjectID(stand.id) }, {
+                                $set: {
+                                    "name": stand.name,
+                                    "description": stand.description,
+                                    "deadlineDate": stand.deadlineDate,
+                                    "time0910": stand.time0910,
+                                    "time1011": stand.time1011,
+                                    "time1112": stand.time1112,
+                                    "time1213": stand.time1213,
+                                    "time1314": stand.time1314,
+                                    "time1415": stand.time1415,
+                                    "time1516": stand.time1516,
+                                    "cbAllowStudentsBreak": stand.cbAllowStudentsBreak,
+                                    "cbAllowStudentsJoin": stand.cbAllowStudentsJoin,
+                                    "cbAllowStudentsLeave": stand.cbAllowStudentsLeave
+                                }
+                            });
+                            res.send(stand);
+                        } catch (err) {
+                            res.status(400);
+                            res.send("Invalid ID! " + err.message);
+                        }
                     }
                     else {
                         res.status(400);
