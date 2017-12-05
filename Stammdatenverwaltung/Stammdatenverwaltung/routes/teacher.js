@@ -26,8 +26,22 @@ router.put('/',function (req, res, next) {
             if (doc[0] != undefined || doc.length > 0) {
                 var cat = doc[0].category;
                 if (cat == "teacher" || cat == "admin") {
-                    if ((typeof teacher.name != undefined && teacher.name != "") && (typeof teacher.password != undefined && teacher.password != "")) { //check multiple attributes later
+                    if ((typeof teacher.username != undefined && teacher.username != "") && 
+                            (typeof teacher.password != undefined && teacher.password != "") && 
+                                (typeof teacher.firstname != undefined && teacher.username != "") && 
+                                    (typeof teacher.lasname != undefined && teacher.lastname != "")) { //check multiple attributes later
                         //add teacher to database? or check smth else first? cant think straight rn
+                        req.db.collection('users').insertOne({
+                            username : teacher.usermane,
+                            firstname : teacher.firstname,
+                            lastname : teacher.lastname,
+                            category : "teacher",
+                            password : teacher.password,
+                        }, function (err, result) {
+
+                            console.log("teacher added");
+                            res.send(teacher);
+                        });
                     }
                     else {
                         res.status(400);
