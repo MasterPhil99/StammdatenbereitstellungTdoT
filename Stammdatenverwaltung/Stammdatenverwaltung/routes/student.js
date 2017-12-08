@@ -13,23 +13,29 @@ router.get('/', function(req, res, next) {
     var fnFlag = false;
     var pClass = req.query.class;
     var cFlag = false;
+    var pUserName = req.query.username;
+    var unFlag = false;
     
 
-    if (pLastName != null && pLastName != undefined) {
+    if (typeof pLastName != undefined && pLastName != null) {
         lnFlag = true;
     }
 
-    if (pFirstName != null && pFirstName != undefined) {
+    if (typeof pFirstName != undefined && pFirstName != null) {
         fnFlag = true;
     }
 
-    if (pClass != null && pClass != undefined) {
+    if (typeof pClass != undefined && pClass != null) {
         cFlag = true;
+    }
+
+    if (typeof pUserName != undefined && pUserName != null) {
+        unFlag = true;
     }
 
     if (lnFlag || fnFlag || cFlag) {
         //filter after the available parameters
-        req.db.collection('users').find({ lastname: pLastName, category: 'student' }, { password: 0 }).toArray(function (err, results) {
+        req.db.collection('users').find({ lastname: pLastName, category: 'student' }, { /*password: 0,*/ category: 0 }).toArray(function (err, results) {
             if (typeof results == undefined || results.length <= 0) {
                 res.status(404);
                 res.send('Student not found!');
@@ -63,7 +69,7 @@ router.get('/:id', function (req, res, next) {
     try {
         var id = new mongo.ObjectID(req.params.id);
 
-        req.db.collection('users').find({ _id: id, category: 'student' }, { password: 0, category:0 }).toArray(function (err, results) {
+        req.db.collection('users').find({ _id: id, category: 'student' }, { /*password: 0,*/ category: 0 }).toArray(function (err, results) {
             if (typeof results != undefined && results.length > 0 && results[0] != undefined) {
                 console.log(results);
                 results[0].link = req.baseURL + "/student";
@@ -78,7 +84,6 @@ router.get('/:id', function (req, res, next) {
         res.status(400);
         res.send("Invalid ID! " + err.message);
     }
-    
 });
 
 router.get('/:id/stand',function(req, res, next) {

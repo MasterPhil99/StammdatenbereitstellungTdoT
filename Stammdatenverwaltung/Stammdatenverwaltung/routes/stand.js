@@ -45,7 +45,7 @@ router.get('/:id', function (req, res, next) {
             if (typeof results != undefined && results.length > 0 && typeof results[0] != undefined) {
                 console.log(results);
                 results[0].link = req.baseURL + "/stand";
-
+                //instead of just the student ids, show the entire student object, when returning the stand
                 res.send(results);
             } else {
                 res.status(404);
@@ -165,6 +165,7 @@ router.put('/', function (req, res, next) {
                         req.db.collection('stands').find({ name: stand.name }).toArray(function (err, resu) {
                             console.log(resu);
                             if (resu.length <= 0 || resu == undefined) {
+                                //do smth similar to what is done in update
                                 if (typeof stand.assigned == undefined) {
                                     //copy stand and give a stand with the entire object of assigned or students etc
                                     //JSON.parse(JSON.stringify(...))
@@ -201,7 +202,66 @@ router.put('/', function (req, res, next) {
 });
 
 router.put('/:id/student',function (req,res,next) {
-    res.send('add a student to a stand');
+    //res.send('add a student to a stand');
+    var standID = req.params.id;
+    var studentID = req.body.id;
+    var cookie = req.cookies.uuid;
+    var head = req.headers['uuid'];
+    var uuid = checkHeaderAndCookie(head, cookie);
+
+    if (uuid == -1) {
+        res.status(401);
+        res.send("You need to be logged in to use this feature!");
+    } else {
+        req.db.collection('users').find({ uuid: uuid }).toArray(function (err, doc) {
+            if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
+                var cat = doc[0].category;
+                if (cat == "teacher" || cat == "admin") {
+                    try {
+                        standID = new mongo.ObjectID(standID);
+                        req.db.collection('stands').find({ _id: id }).toArray(function (err, docu) {
+                            if (typeof docu != undefined && docu.length > 0 && typeof docu[0] != undefined) {
+                                try {
+                                    studentID = new mongo.ObjectID(studentID);
+                                    req.db.collection('users').find({ _id: studentID }).toArray(function (err, docum) {
+                                        if (typeof docum != undefined && docum.length > 0 && typeof docum[0] != undefined) {
+                                            req.db.collection('stands').updateOne({ _id: standID }, {
+                                                $addToSet: {
+                                                    "students": studentID
+                                                }
+                                            });
+                                            res.send("Successfully added student to stand!");
+                                        }
+                                        else {
+                                            res.status(400);
+                                            res.send("Bad Request! This student does not exist!");
+                                        }
+                                    });
+                                } catch (err) {
+                                    res.status(400);
+                                    res.send("Invalid Student ID! " + err.message);
+                                }
+                            }
+                            else {
+                                res.status(400);
+                                res.send("Bad Request! This stand does not exist!");
+                            }
+                        });
+                    } catch (err) {
+                        res.status(400);
+                        res.send("Invalid Stand ID! " + err.message);
+                    }
+                }
+                else {
+                    res.status(403);
+                    res.send("Unauthorized to add a stand!");
+                }
+            } else {
+                res.status(401);
+                res.send("You need to be logged in to use this feature!");
+            }
+        });
+    }
 });
 
 router.put('/:id/teacher',function (req,res,next) {
