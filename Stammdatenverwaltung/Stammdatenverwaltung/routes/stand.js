@@ -46,6 +46,11 @@ router.get('/:id', function (req, res, next) {
                 console.log(results);
                 results[0].link = req.baseURL + "/stand";
                 //instead of just the student ids, show the entire student object, when returning the stand
+                //var returnStand = JSON.parse(JSON.stringify(results[0]));
+
+                //returnStand.students = [];
+                //for every student in results[0].students -> find the entire student object and write that into the array
+
                 res.send(results);
             } else {
                 res.status(404);
@@ -66,7 +71,7 @@ router.get('/:id/teacher',function(req, res, next) {
     res.send('list of teacher in this stand');
 });
 
-function checkHeaderAndCookie(header, cookie) {
+function checkHeaderAndCookie(db, header, cookie) {
     var uuid;
 
     if (cookie === undefined || cookie == "") {
@@ -76,7 +81,7 @@ function checkHeaderAndCookie(header, cookie) {
             uuid = header;
         }
     } else {
-        req.db.collection('UUIDExpiry').find({ uuid: cookie }).toArray(function (err, resu) {
+        db.collection('UUIDExpiry').find({ uuid: cookie }).toArray(function (err, resu) {
             if (typeof resu != undefined && typeof resu[0] != undefined) {
                 uuid = cookie;
             } else {
@@ -93,8 +98,7 @@ router.post('/', function (req, res, next) {
     var stand = req.body;
     var cookie = req.cookies.uuid;
     var head = req.headers['uuid'];
-    var uuid = checkHeaderAndCookie(head, cookie);
-
+    var uuid = checkHeaderAndCookie(req.db, head, cookie);
     
     if (uuid == -1) {
         res.status(401);
@@ -105,29 +109,36 @@ router.post('/', function (req, res, next) {
                 var cat = doc[0].category;
                 if (cat == "teacher" || cat == "admin") { //maybe use assigned teacher
                     if (stand.name != undefined && stand.name != "") {
-                        try {
-                            req.db.collection('stands').updateOne({ "_id": mongo.ObjectID(stand.id) }, {
-                                $set: {
-                                    "name": stand.name,
-                                    "description": stand.description,
-                                    "deadlineDate": stand.deadlineDate,
-                                    "time0910": stand.time0910,
-                                    "time1011": stand.time1011,
-                                    "time1112": stand.time1112,
-                                    "time1213": stand.time1213,
-                                    "time1314": stand.time1314,
-                                    "time1415": stand.time1415,
-                                    "time1516": stand.time1516,
-                                    "cbAllowStudentsBreak": stand.cbAllowStudentsBreak,
-                                    "cbAllowStudentsJoin": stand.cbAllowStudentsJoin,
-                                    "cbAllowStudentsLeave": stand.cbAllowStudentsLeave
+                        req.db.collection('stands').find({ name: stand.name }).toArray(function (err, docu) {
+                            if (docu.length <= 0) {
+                                try {
+                                    req.db.collection('stands').updateOne({ "_id": mongo.ObjectID(stand.id) }, {
+                                        $set: {
+                                            "name": stand.name,
+                                            "description": stand.description,
+                                            "deadlineDate": stand.deadlineDate,
+                                            "time0910": stand.time0910,
+                                            "time1011": stand.time1011,
+                                            "time1112": stand.time1112,
+                                            "time1213": stand.time1213,
+                                            "time1314": stand.time1314,
+                                            "time1415": stand.time1415,
+                                            "time1516": stand.time1516,
+                                            "cbAllowStudentsBreak": stand.cbAllowStudentsBreak,
+                                            "cbAllowStudentsJoin": stand.cbAllowStudentsJoin,
+                                            "cbAllowStudentsLeave": stand.cbAllowStudentsLeave
+                                        }
+                                    });
+                                    res.send(stand);
+                                } catch (err) {
+                                    res.status(400);
+                                    res.send("Invalid ID! " + err.message);
                                 }
-                            });
-                            res.send(stand);
-                        } catch (err) {
-                            res.status(400);
-                            res.send("Invalid ID! " + err.message);
-                        }
+                            } else {
+                                res.status(400);
+                                res.send("Bad Request! Stand with this name already exists!");
+                            }
+                        });
                     }
                     else {
                         res.status(400);
@@ -151,7 +162,7 @@ router.put('/', function (req, res, next) {
     var stand = req.body;
     var cookie = req.cookies.uuid;
     var head = req.headers['uuid'];
-    var uuid = checkHeaderAndCookie(head, cookie);
+    var uuid = checkHeaderAndCookie(req.db, head, cookie);
 
     if (uuid == -1) {
         res.status(401);
@@ -165,15 +176,25 @@ router.put('/', function (req, res, next) {
                         req.db.collection('stands').find({ name: stand.name }).toArray(function (err, resu) {
                             console.log(resu);
                             if (resu.length <= 0 || resu == undefined) {
-                                //do smth similar to what is done in update
-                                if (typeof stand.assigned == undefined) {
-                                    //copy stand and give a stand with the entire object of assigned or students etc
-                                    //JSON.parse(JSON.stringify(...))
-                                    //write the one with only the ids into the database
-                                    stand.assigned = doc._id;
+                                if (stand.assigned == undefined) {
+                                    stand.assigned = doc[0]._id;
                                 }
 
-                                req.db.collection('stands').insertOne(stand, function (err, result) {
+                                req.db.collection('stands').insertOne({
+                                    "name": stand.name,
+                                    "description": stand.description,
+                                    "deadlineDate": stand.deadlineDate,
+                                    "time0910": stand.time0910,
+                                    "time1011": stand.time1011,
+                                    "time1112": stand.time1112,
+                                    "time1213": stand.time1213,
+                                    "time1314": stand.time1314,
+                                    "time1415": stand.time1415,
+                                    "time1516": stand.time1516,
+                                    "cbAllowStudentsBreak": stand.cbAllowStudentsBreak,
+                                    "cbAllowStudentsJoin": stand.cbAllowStudentsJoin,
+                                    "cbAllowStudentsLeave": stand.cbAllowStudentsLeave
+                                }, function (err, result) {
                                     console.log("1 stand inserted '" + stand.name + "'");
                                     stand.id = stand._id;
                                     res.send(stand);
@@ -207,7 +228,7 @@ router.put('/:id/student',function (req,res,next) {
     var studentID = req.body.id;
     var cookie = req.cookies.uuid;
     var head = req.headers['uuid'];
-    var uuid = checkHeaderAndCookie(head, cookie);
+    var uuid = checkHeaderAndCookie(req.db, head, cookie);
 
     if (uuid == -1) {
         res.status(401);
@@ -219,7 +240,7 @@ router.put('/:id/student',function (req,res,next) {
                 if (cat == "teacher" || cat == "admin") {
                     try {
                         standID = new mongo.ObjectID(standID);
-                        req.db.collection('stands').find({ _id: id }).toArray(function (err, docu) {
+                        req.db.collection('stands').find({ _id: standID }).toArray(function (err, docu) {
                             if (typeof docu != undefined && docu.length > 0 && typeof docu[0] != undefined) {
                                 try {
                                     studentID = new mongo.ObjectID(studentID);
@@ -233,8 +254,8 @@ router.put('/:id/student',function (req,res,next) {
                                             res.send("Successfully added student to stand!");
                                         }
                                         else {
-                                            res.status(400);
-                                            res.send("Bad Request! This student does not exist!");
+                                            res.status(404);
+                                            res.send("This student does not exist!");
                                         }
                                     });
                                 } catch (err) {
@@ -243,8 +264,8 @@ router.put('/:id/student',function (req,res,next) {
                                 }
                             }
                             else {
-                                res.status(400);
-                                res.send("Bad Request! This stand does not exist!");
+                                res.status(404);
+                                res.send("This stand does not exist!");
                             }
                         });
                     } catch (err) {

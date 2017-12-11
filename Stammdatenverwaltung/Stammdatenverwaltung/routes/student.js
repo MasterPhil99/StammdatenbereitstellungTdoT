@@ -15,27 +15,30 @@ router.get('/', function(req, res, next) {
     var cFlag = false;
     var pUserName = req.query.username;
     var unFlag = false;
-    
+    var query = { category: 'student' };
 
     if (typeof pLastName != undefined && pLastName != null) {
         lnFlag = true;
+        query.lastname = pLastName;
     }
 
     if (typeof pFirstName != undefined && pFirstName != null) {
         fnFlag = true;
+        query.firstname = pFirstName;
     }
 
     if (typeof pClass != undefined && pClass != null) {
         cFlag = true;
+        query.class = pClass;
     }
 
     if (typeof pUserName != undefined && pUserName != null) {
         unFlag = true;
+        query.username = pUserName;
     }
 
-    if (lnFlag || fnFlag || cFlag) {
-        //filter after the available parameters
-        req.db.collection('users').find({ lastname: pLastName, category: 'student' }, { /*password: 0,*/ category: 0 }).toArray(function (err, results) {
+    if (lnFlag || fnFlag || cFlag || unFlag) {
+        req.db.collection('users').find(query, { /*password: 0,*/ category: 0 }).toArray(function (err, results) {
             if (typeof results == undefined || results.length <= 0) {
                 res.status(404);
                 res.send('Student not found!');
@@ -89,10 +92,5 @@ router.get('/:id', function (req, res, next) {
 router.get('/:id/stand',function(req, res, next) {
     res.send('list of stands with this user');
 });
-
-/*
-router.post('/',function (req, res, next) {
-    res.send('update user');
-});*/
 
 module.exports = router;
