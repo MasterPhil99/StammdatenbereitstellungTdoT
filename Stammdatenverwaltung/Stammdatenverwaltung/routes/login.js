@@ -2,13 +2,15 @@
 var router = express.Router();
 
 var ActiveDirectory = require('activedirectory');
+//use the ad user, which is given to us at a later time
 var config = {
-    url: 'ldap:\\minerva.htl-vil.local:636',
-    baseDN: 'dc=htl-vil,dc=local[:636]',
-    username: 'username@domain.com',
-    password: 'password'
+    url: 'LDAP://minerva.htl-vil.local',
+    baseDN: 'ou=Users,dc=htl-vil,dc=local',
+    username: 'htl-vil\\maurerp',
+    password: ''
 }
 var ad = new ActiveDirectory(config);
+var base = 'ou=Users,dc=htl-vil,dc=local';
 
 //'der gesamte string in einem: LDAP:\\minerva.htl-vil.local/ou=Users,dc=htl-vil,dc=local[:Port] wobei der optionale Port 636 (SSL) oder 389 ist
 
@@ -22,25 +24,58 @@ router.get('/', function (req, res, next) {
     }
     else {
         req.db.collection('users').find({ username: uName }).toArray(function (err, doc) {
-            console.log(doc);
-            if (typeof doc != undefined && doc.length > 0) {
-                if (doc.category == 'student') {
-                    ad.authenticate(uName, uPwd, function (err, auth) {
+            if (doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
+                var decPwd;
+                if (typeof Buffer.from === "function") {
+                    // Node 5.10+
+                    decPwd = Buffer.from(uPwd, 'base64').toString();
+                } else {
+                    // older Node versions
+                    decPwd = new Buffer(uPwd, 'base64').toString();
+                }
+
+                //console.log(decPwd);
+
+                if (doc[0].category == 'student') {
+                    ad.authenticate(uName, decPwd, function (err, auth) {
                         if (err) {
                             res.status(400);
                             res.send("AD Error! " + JSON.stringify(err));
                         }
 
                         if (auth) {
-                            //do the check that is done above but with the student data and send the uuid back
-                            res.status(200);
-                            res.send("Authenticated!");
                             console.log('Authenticated!');
+                            var expiryTime = 90000;
+                            var uuid = getUuid();
+                            console.log(doc[0]);
+                            console.log(doc[0].uuid);
+                            if (doc[0].uuid == undefined || doc[0].uuid == "") {
+                                console.log("creating new uuid..");
+                                res.cookie('uuid', uuid, { maxAge: expiryTime, httpOnly: true });
+
+                                var newUser = JSON.parse(JSON.stringify(doc[0]));
+                                newUser.uuid = uuid;
+                                req.db.collection('users').update({ _id: doc[0]._id }, { $set: { uuid: uuid } });
+
+                                req.db.collection('UUIDExpiry').createIndex({ createdAt: 1 }, { expireAfterSeconds: expiryTime });
+                                req.db.collection('UUIDExpiry').insertOne({ uuid: uuid, createdAt: new Date() });
+                                
+                                res.send(newUser);
+                            } else {
+                                var User = JSON.parse(JSON.stringify(doc[0]));
+                                console.log("updating expiry and using old one..");
+                                req.db.collection('UUIDExpiry').createIndex({ createdAt: 1 }, { expireAfterSeconds: expiryTime });
+                                req.db.collection('UUIDExpiry').insertOne({ uuid: uuid, createdAt: new Date() });
+
+                                res.cookie('uuid', User.uuid, { maxAge: expiryTime, httpOnly: true });
+
+                                res.send(User);
+                            }
                         }
                         else {
                             console.log('Authentication failed!');
                             res.status(401);
-                            res.send("AD Authentication failed!");
+                            res.send("AD Authentication failed! Username or Password might be wrong!");
                         }
                     });
                 } else {
@@ -56,19 +91,24 @@ router.get('/', function (req, res, next) {
 
                                 var newUser = JSON.parse(JSON.stringify(result[0]));
                                 newUser.uuid = uuid;
+                                delete newUser.password;
                                 req.db.collection('users').update({ _id: result[0]._id }, { $set: { uuid: uuid } });
 
                                 req.db.collection('UUIDExpiry').createIndex({ createdAt: 1 }, { expireAfterSeconds: expiryTime });
                                 req.db.collection('UUIDExpiry').insertOne({ uuid: uuid, createdAt: new Date() });
 
+
                                 res.send(newUser);
                             } else {
+                                var User = JSON.parse(JSON.stringify(result[0]));
+                                delete User.password;
                                 console.log("updating expiry and using old one..");
                                 req.db.collection('UUIDExpiry').createIndex({ createdAt: 1 }, { expireAfterSeconds: expiryTime });
                                 req.db.collection('UUIDExpiry').insertOne({ uuid: uuid, createdAt: new Date() });
 
-                                res.cookie('uuid', result[0].uuid, { maxAge: expiryTime, httpOnly: true });
-                                res.send(result[0]);
+                                res.cookie('uuid', User.uuid, { maxAge: expiryTime, httpOnly: true });
+
+                                res.send(User);
                             }
                         } else {
                             res.status(401);

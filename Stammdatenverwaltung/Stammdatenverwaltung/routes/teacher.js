@@ -43,7 +43,7 @@ router.get('/', function(req, res, next) {
         });
     }
     else {
-        req.db.collection('users').find({ category: 'teacher' }, { _id: 1, username: 1}).toArray(function (err, results) {
+        req.db.collection('users').find({ category: 'teacher' }, { _id: 1, username: 1 }).toArray(function (err, results) {
             if (typeof results == undefined || results.length <= 0) {
                 res.status(404);
                 res.send('Teacher not found!');
@@ -84,7 +84,7 @@ router.get('/:id/stand',function(req, res, next) {
     res.send('Stands with this teacher');
 });
 
-function checkHeaderAndCookie(header, cookie) {
+function checkHeaderAndCookie(db, header, cookie) {
     var uuid;
 
     if (cookie === undefined || cookie == "") {
@@ -94,7 +94,7 @@ function checkHeaderAndCookie(header, cookie) {
             uuid = header;
         }
     } else {
-        req.db.collection('UUIDExpiry').find({ uuid: cookie }).toArray(function (err, resu) {
+        db.collection('UUIDExpiry').find({ uuid: cookie }).toArray(function (err, resu) {
             if (typeof resu != undefined && typeof resu[0] != undefined) {
                 uuid = cookie;
             } else {
@@ -111,7 +111,7 @@ router.put('/',function (req, res, next) {
     var teacher = req.body;
     var cookie = req.cookies.uuid;
     var head = req.headers['uuid'];
-    var uuid = checkHeaderAndCookie(head, cookie);
+    var uuid = checkHeaderAndCookie(req.db, head, cookie);
 
     if (uuid == -1) {
         res.status(401);
