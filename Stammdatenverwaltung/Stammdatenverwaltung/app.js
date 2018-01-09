@@ -49,7 +49,7 @@ app.use(function (req, res, next) {
 app.use(function (req, res, next) {
     var url = req.originalUrl;
     console.log(url);
-    if (url != '/login/') {
+    if (url != '/login/' && url != '/login' && url != 'login') {
         var uuid = req.headers['uuid'];
         if (typeof uuid == 'undefined') {
             res.status(401);
