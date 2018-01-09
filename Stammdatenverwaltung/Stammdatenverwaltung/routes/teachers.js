@@ -65,10 +65,18 @@ router.get('/:id',function(req, res, next) {
 
         req.db.collection('users').find({ _id: id, category: 'teacher' }, { password: 0, category: 0 }).toArray(function (err, results) {
             if (typeof results != undefined && results.length > 0 && results[0] != undefined) {
-                console.log(results);
-                results[0].link = req.baseURL + "/teacher";
+                req.db.collection('stands').find({ teachers: results[0]._id }).toArray(function (err, doc) {
+                    results[0].id = results[0]._id;
+                    results[0].link = req.baseURL + "/teacher/";
+                    //results[0].assigned = false;
+                    console.log(doc);
+                    if (typeof doc != undefined && doc.length > 0) {
+                        //results[0].assigned = true;
+                        results[0].stand = doc[0];
+                    }
 
-                res.send(results);
+                    res.send(results);
+                });
             } else {
                 res.status(404);
                 res.send("Teacher not found!");
@@ -162,57 +170,48 @@ router.post('/', function (req, res, next) {
             if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
                 var cat = doc[0].category;
                 console.log(cat);
-                if (cat == "teacher" || cat == "admin") { //only the teacher themselves?
-                    if (teacher.username != undefined && teacher.username != "") { //which attribute to use? just gonna go w username for now
-                        req.db.collection('users').find({ username: teacher.username }).toArray(function (err, docu) {
-                            if (docu.length <= 0 || docu == undefined) {
-                                try {
-                                    req.db.collection('users').find({ "_id": mongo.ObjectID(teacher.id) }).toArray(function (err, result) {
-                                        console.log(result);
-                                        if (result.length > 0) {
-                                            var query = { username: teacher.username };
-                                            if (teacher.lastname != undefined)
-                                                query.lastname = teacher.lastname;
+                if (cat == "admin") {
+                    try {
+                        req.db.collection('users').find({ "_id": mongo.ObjectID(teacher.id) }).toArray(function (err, result) {
+                            console.log(result);
+                            if (result.length > 0) {
+                                var query = { };
 
-                                            if (teacher.firstname != undefined)
-                                                query.firstname = teacher.firstname;
+                                if (teacher.username != undefined)
+                                    query.username = teacher.username;
 
-                                            if (teacher.password != undefined)
-                                                query.password = teacher.password;
+                                if (teacher.lastname != undefined)
+                                    query.lastname = teacher.lastname;
+
+                                if (teacher.firstname != undefined)
+                                    query.firstname = teacher.firstname;
+
+                                if (teacher.password != undefined)
+                                    query.password = teacher.password;
                                             
-                                            req.db.collection('users').updateOne({ "_id": mongo.ObjectID(teacher.id) }, {
-                                                $set: query
-                                            }, function (err, resu) {
-                                                if (err) {
-                                                    res.status(400);
-                                                    res.send("Error when updating the teacher!");
-                                                } else {
-                                                    if (resu.result.nModified > 0) {
-                                                        res.send(teacher);
-                                                    } else {
-                                                        res.status(400);
-                                                        res.send("Error! Teacher was not updated!");
-                                                    }
-                                                }
-                                            });
+                                req.db.collection('users').updateOne({ "_id": mongo.ObjectID(teacher.id) }, {
+                                    $set: query
+                                }, function (err, resu) {
+                                    if (err) {
+                                        res.status(400);
+                                        res.send("Error when updating the teacher!");
+                                    } else {
+                                        if (resu.result.nModified > 0) {
+                                            res.send(teacher);
                                         } else {
-                                            res.status(404);
-                                            res.send("No Stand with this ID exists!");
+                                            res.status(400);
+                                            res.send("Error! Teacher was not updated!");
                                         }
-                                    });
-                                } catch (err) {
-                                    res.status(400);
-                                    res.send("Invalid ID! " + err.message);
-                                }
+                                    }
+                                });
                             } else {
-                                res.status(400);
-                                res.send("Bad Request! Teacher with this username already exists!");
+                                res.status(404);
+                                res.send("No Stand with this ID exists!");
                             }
                         });
-                    }
-                    else {
+                    } catch (err) {
                         res.status(400);
-                        res.send("Bad Request! Username must be defined!");
+                        res.send("Invalid ID! " + err.message);
                     }
                 }
                 else {

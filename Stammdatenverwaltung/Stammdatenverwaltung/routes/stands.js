@@ -47,34 +47,39 @@ router.get('/:id', function (req, res, next) {
                 results[0].link = req.baseURL + "/stand";
                 
                 req.db.collection('users').find({ category: "student" }).toArray(function (err, doc) {
-                    var tobecontained = results[0].students;
-
-                    for (var key in tobecontained) {
-                        tobecontained[key] = tobecontained[key] + "";
-                    }
-                    
-                    var result = doc.filter(element => {
-                       return (tobecontained.indexOf(element._id+"") > -1);
-                    });
-                    
                     var returnStand = JSON.parse(JSON.stringify(results[0]));
-                    returnStand.students = result;
 
-                    /*
-                    req.db.collection('users').find({ category: "teacher" }).toArray(function (err, docs) {
-                        var tobecontainedA = results[0].assigned; //and later also results[0].teachers
+                    if (results[0].students != undefined) {
+                        var tobecontained = results[0].students;
 
-                        for (var k in tobecontainedA) {
-                            tobecontainedA[k] = tobecontainedA[k] + "";
+                        for (var key in tobecontained) {
+                            tobecontained[key] = tobecontained[key] + "";
                         }
 
-                        var result = docs.filter(element => {
-                            return (tobecontainedA.indexOf(element._id + "") > -1);
+                        var result = doc.filter(element => {
+                            return (tobecontained.indexOf(element._id + "") > -1);
                         });
 
-                        //returnStand = JSON.parse(JSON.stringify(results[0]));
-                        returnStand.assigned = result;
-                    });*/
+                        returnStand.students = result;
+                    }
+
+
+                        /*
+                        req.db.collection('users').find({ category: "teacher" }).toArray(function (err, docs) {
+                            var tobecontainedA = results[0].assigned; //and later also results[0].teachers
+
+                            for (var k in tobecontainedA) {
+                                tobecontainedA[k] = tobecontainedA[k] + "";
+                            }
+
+                            var result = docs.filter(element => {
+                                return (tobecontainedA.indexOf(element._id + "") > -1);
+                            });
+
+                            //returnStand = JSON.parse(JSON.stringify(results[0]));
+                            returnStand.assigned = result;
+                        });*/
+
                     res.send(returnStand);
                 });
             } else {
@@ -88,14 +93,85 @@ router.get('/:id', function (req, res, next) {
     }
 });
 
-router.get('/:id/student',function(req, res, next) {
-    res.send('list of students in this stand');
+router.get('/:id/students',function(req, res, next) {
+    //res.send('list of students in this stand');
+    try {
+        var id = new mongo.ObjectID(req.params.id);
+        req.db.collection('stands').find({ _id: id }).toArray(function (err, results) {
+            if (typeof results != undefined && results.length > 0 && typeof results[0] != undefined) {
+                console.log(results);
+                results[0].link = req.baseURL + "/stand";
+
+                req.db.collection('users').find({ category: "student" }).toArray(function (err, doc) {
+                    var returnStand = JSON.parse(JSON.stringify(results[0]));
+
+                    if (results[0].students != undefined) {
+                        var tobecontained = results[0].students;
+
+                        for (var key in tobecontained) {
+                            tobecontained[key] = tobecontained[key] + "";
+                        }
+
+                        var result = doc.filter(element => {
+                            return (tobecontained.indexOf(element._id + "") > -1);
+                        });
+
+                        res.send(result);
+                    } else {
+                        res.status(404);
+                        res.send("No students in stand!");
+                    }
+                });
+            } else {
+                res.status(404);
+                res.send("Stand not found!");
+            }
+        });
+    } catch (err) {
+        res.status(400);
+        res.send("Invalid ID! " + err.message);
+    }
 });
 
-router.get('/:id/teacher',function(req, res, next) {
-    res.send('list of teacher in this stand');
-});
+router.get('/:id/teachers',function(req, res, next) {
+    //res.send('list of teacher in this stand');
+    try {
+        var id = new mongo.ObjectID(req.params.id);
+        req.db.collection('stands').find({ _id: id }).toArray(function (err, results) {
+            if (typeof results != undefined && results.length > 0 && typeof results[0] != undefined) {
+                console.log(results);
+                results[0].link = req.baseURL + "/stand";
 
+                req.db.collection('users').find({ category: "teacher" }).toArray(function (err, doc) {
+                    var returnStand = JSON.parse(JSON.stringify(results[0]));
+
+                    if (results[0].teachers != undefined) {
+                        var tobecontained = results[0].teachers;
+
+                        for (var key in tobecontained) {
+                            tobecontained[key] = tobecontained[key] + "";
+                        }
+
+                        var result = doc.filter(element => {
+                            return (tobecontained.indexOf(element._id + "") > -1);
+                        });
+
+                        res.send(result);
+                    } else {
+                        res.status(404);
+                        res.send("No teachers in stand!");
+                    }
+                });
+            } else {
+                res.status(404);
+                res.send("Stand not found!");
+            }
+        });
+    } catch (err) {
+        res.status(400);
+        res.send("Invalid ID! " + err.message);
+    }
+});
 
 router.post('/', function (req, res, next) {
     //res.send('update the stand');
@@ -283,7 +359,7 @@ router.put('/', function (req, res, next) {
     }
 });
 
-router.put('/:id/student', function (req, res, next) {
+router.put('/:id/students', function (req, res, next) {
     //res.send('add a student to a stand');
     var standID = req.params.id;
     var studID = req.body.id; 
@@ -311,16 +387,15 @@ router.put('/:id/student', function (req, res, next) {
                                                 docu[0].students[key] = docu[0].students[key] + "";
                                             }
 
-                                            if (docu[0].students.includes(studentID + "")) {
-                                                res.status(400);
-                                                res.send("Student already in stand!");
+                                            if (docu[0].students != undefined) {
+                                                if (docu[0].students.includes(studentID + "")) {
+                                                    res.status(400);
+                                                    res.send("Student already in stand!");
+                                                } else {
+                                                    addStudentToStand(req, res, standID, studentID, docum);
+                                                }
                                             } else {
-                                                req.db.collection('stands').updateOne({ _id: standID }, {
-                                                    $addToSet: {
-                                                        "students": studentID
-                                                    }
-                                                });
-                                                res.send("Successfully added student to stand!");
+                                                addStudentToStand(req, res, standID, studentID, docum);
                                             }
                                         }
                                         else {
@@ -355,7 +430,35 @@ router.put('/:id/student', function (req, res, next) {
     }
 });
 
-router.put('/:id/teacher',function (req,res,next) {
+function addStudentToStand(req, res, standID, studentID, docum) {
+    req.db.collection('stands').updateOne({ _id: standID }, {
+        $addToSet: {
+            "students": studentID
+        }
+    });
+
+    if (!(req.user.id + "" == docum[0]._id + "") && (typeof (docum[0].settings) === 'undefined' || docum[0].settings.leaveStand)) {
+        sendMsgToUser(req.db, req.user.id, docum[0]._id, "Standeinstellungen wurden geupdated");
+    }
+
+    res.send("Successfully added student to stand!");
+}
+
+function addTeacherToStand(req, res, standID, teacherID, docum) {
+    req.db.collection('stands').updateOne({ _id: standID }, {
+        $addToSet: {
+            "teachers": teacherID
+        }
+    });
+
+    if (!(req.user.id + "" == docum[0]._id + "") && (typeof (docum[0].settings) === 'undefined' || docum[0].settings.leaveStand)) {
+        sendMsgToUser(req.db, req.user.id, docum[0]._id, "Standeinstellungen wurden geupdated");
+    }
+
+    res.send("Successfully added teacher to stand!");
+}
+
+router.put('/:id/teachers',function (req,res,next) {
     //res.send('add a teacher to a stand');
 	var standID = req.params.id;
     var teachID = req.body.id; 
@@ -379,20 +482,19 @@ router.put('/:id/teacher',function (req,res,next) {
                                     req.db.collection('users').find({ _id: teacherID }).toArray(function (err, docum) {
                                         if (typeof docum != undefined && docum.length > 0 && typeof docum[0] != undefined) {
 
-                                            for (var key in docu[0].students) {
-                                                docu[0].teachers[key] = docu[0].students[key] + "";
+                                            for (var key in docu[0].teachers) {
+                                                docu[0].teachers[key] = docu[0].teachers[key] + "";
                                             }
 
-                                            if (docu[0].teachers.includes(teacherID + "")) {
-                                                res.status(400);
-                                                res.send("Teacher already in stand!");
+                                            if (docu[0].teachers != undefined) {
+                                                if (docu[0].teachers.includes(teacherID + "")) {
+                                                    res.status(400);
+                                                    res.send("Teacher already in stand!");
+                                                } else {
+                                                    addTeacherToStand(req, res, standID, teacherID, docum);
+                                                }
                                             } else {
-                                                req.db.collection('stands').updateOne({ _id: standID }, {
-                                                    $addToSet: {
-                                                        "teachers": teacherID
-                                                    }
-                                                });
-                                                res.send("Successfully added teacher to stand!");
+                                                addTeacherToStand(req, res, standID, teacherID, docum);
                                             }
                                         }
                                         else {
@@ -447,8 +549,14 @@ router.delete('/:id',function (req, res, next) {
                         req.db.collection('stands').find({ _id: standID }).toArray(function (err, docu) {
                             if (typeof docu != undefined && docu.length > 0 && typeof docu[0] != undefined) {
                                 req.db.collection('stands').deleteOne({ _id: standID });
+                                
+                                for (key in docu[0].students) {
+                                    if (!(req.user.id + "" == docu[0].students[key]._id + "") && (typeof (docu[0].students[key].settings) === 'undefined' || docu[0].students[key].settings.leaveStand)) {
+                                        sendMsgToUser(req.db, req.user.id, docu[0].students[key]._id, "Standeinstellungen wurden geupdated");
+                                    }
+                                }
+
                                 res.send("Stand successfully deleted!");
-                                //notify
                             }
                             else {
                                 res.status(404);
@@ -472,7 +580,7 @@ router.delete('/:id',function (req, res, next) {
     }
 });
 
-router.delete('/:id/student',function (req, res, next) {
+router.delete('/:id/students',function (req, res, next) {
     //res.send('Remove a student from a stand');
     var standID = req.params.id;
     var studID = req.body.id; 
@@ -500,18 +608,24 @@ router.delete('/:id/student',function (req, res, next) {
                                                 docu[0].students[key] = docu[0].students[key] + "";
                                             }
 
-                                            if (docu[0].students.includes(studentID + "")) {
+                                            if (docu[0].students != undefined) {
+                                                if (docu[0].students.includes(studentID + "")) {
+                                                    req.db.collection('stands').updateOne({ _id: standID }, {
+                                                        $pull: { students: studentID }
+                                                    });
 
-                                                //check if this rly works
-                                                req.db.collection('stands').updateOne({ _id: standID }, {
-                                                    $pull: { students: studentID }
-                                                });
+                                                    if (!(req.user.id + "" == docum[0]._id + "") && (typeof (docum[0].settings) === 'undefined' || docum[0].settings.leaveStand)) {
+                                                        sendMsgToUser(req.db, req.user.id, docum[0]._id, "Standeinstellungen wurden geupdated");
+                                                    }
 
-                                                res.send("Successfully removed student from stand!"); //check if assigned -> also remove? but maybe not
-                                                //also notify w msg.js
+                                                    res.send("Successfully removed student from stand!");
+                                                } else {
+                                                    res.status(400);
+                                                    res.send("Student not in stand!");
+                                                }
                                             } else {
                                                 res.status(400);
-                                                res.send("Student not in stand!");
+                                                res.send("No students in stand!");
                                             }
                                         }
                                         else {
@@ -536,7 +650,7 @@ router.delete('/:id/student',function (req, res, next) {
                 }
                 else {
                     res.status(403);
-                    res.send("Unauthorized to add a student to a stand!");
+                    res.send("Unauthorized to remove a student to a stand!");
                 }
             } else {
                 res.status(401);
@@ -546,7 +660,7 @@ router.delete('/:id/student',function (req, res, next) {
     }
 });
 
-router.delete('/:id/teacher',function (req, res, next) {
+router.delete('/:id/teachers',function (req, res, next) {
     //res.send('Remove a teacher from a stand');
     var standID = req.params.id;
     var teachID = req.body.id; 
@@ -571,21 +685,34 @@ router.delete('/:id/teacher',function (req, res, next) {
                                         if (typeof docum != undefined && docum.length > 0 && typeof docum[0] != undefined) {
 
                                             for (var key in docu[0].teachers) {
-                                                docu[0].teachers[key] = docu[0].students[key] + "";
+                                                docu[0].teachers[key] = docu[0].teachers[key] + "";
                                             }
+                                            console.log(docu[0].teachers);
+                                            console.log(teacherID);
+                                            if (docu[0].teachers != undefined) {
+                                                if (docu[0].teachers.includes(teacherID + "")) {
 
-                                            if (docu[0].teachers.includes(teacherID + "")) {
+                                                    if (docu[0].assigned + "" == teacherID + "") {
+                                                        req.db.collection('stands').updateOne({ _id: standID }, { $set: { assigned: null } });
+                                                    }
 
-                                                //check if this rly works
-                                                req.db.collection('stands').updateOne({ _id: standID }, {
-                                                    $pull: { teachers: teacherID }
-                                                });
+                                                    req.db.collection('stands').updateOne({ _id: standID }, {
+                                                        $pull: { teachers: teacherID }
+                                                    });
 
-                                                res.send("Successfully removed teacher from stand!"); //check if assigned -> also remove? but maybe not
-                                                //also notify w msg.js
-                                            } else {
+                                                    if (!(req.user.id + "" == docum[0]._id + "") && (typeof (docum[0].settings) === 'undefined' || docum[0].settings.leaveStand)) {
+                                                        sendMsgToUser(req.db, req.user.id, docum[0]._id, "Standeinstellungen wurden geupdated");
+                                                    }
+
+                                                    res.send("Successfully removed teacher from stand!");
+                                                } else {
+                                                    res.status(400);
+                                                    res.send("Teacher not in stand!");
+                                                }
+                                            }
+                                            else {
                                                 res.status(400);
-                                                res.send("Teacher not in stand!");
+                                                res.send("No Teacher in stand!");
                                             }
                                         }
                                         else {
@@ -619,5 +746,17 @@ router.delete('/:id/teacher',function (req, res, next) {
         });
     }
 });
+
+function sendMsgToUser(db, from, to, text) {
+    var o = {
+        text: text,
+        user: to,
+        from: from,
+        time: new Date()
+    };
+    db.collection('msg').insert(o, function (err, result) {
+        if (err) throw err;
+    });
+}
 
 module.exports = router;
