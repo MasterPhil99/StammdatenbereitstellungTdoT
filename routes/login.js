@@ -41,9 +41,9 @@ router.get('/', function (req, res, next) {
         res.status(400);
         res.send("Bad Request! Username and Password must be defined!");
     }
-    else {
+	else {
         req.db.collection('users').find({ username: uName }).toArray(function (err, doc) {
-            if (doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
+            //if (doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
                 var decPwd;
                 if (typeof Buffer.from === "function") {
                     // Node 5.10+
@@ -57,10 +57,16 @@ router.get('/', function (req, res, next) {
 
                 if (doc[0].category == 'student') {
                     ad.authenticate("htl-vil\\" + uName, decPwd, function (err, auth) {
-                        if (err) {
-                            //
-                            res.status(400);
-                            res.send("AD Error! " + JSON.stringify(err));
+						if (err) {
+							var errObj = JSON.parse(JSON.stringify(err));
+							if (errObj.lde_message.includes("AcceptSecurityContext")) {
+								res.status(401);
+								res.send("Authentication failed! Username or Password might be wrong!");
+							}
+							else {
+								res.status(500);
+								res.send(JSON.stringify(err));
+							}
                         } else {
                             if (auth) {
                                 console.log('Authenticated!');
@@ -94,7 +100,7 @@ router.get('/', function (req, res, next) {
                             else {
                                 console.log('Authentication failed!');
                                 res.status(401);
-                                res.send("AD Authentication failed! Username or Password might be wrong!");
+                                res.send("Authentication failed! Username or Password might be wrong!");
                             }
                         }
                     });
@@ -136,10 +142,10 @@ router.get('/', function (req, res, next) {
                         }
                     });
                 }
-            } else {
-                res.status(404);
-                res.send("User not found!");
-            }
+            //} else {
+            //    res.status(404);
+            //    res.send("User not found!");
+            //}
         });
     }
 });

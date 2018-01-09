@@ -1,2 +1,0 @@
-D:\Users\Peri\Documents\GitHub\StammdatenbereitstellungTdoT\Stammdatenverwaltung\Stammdatenverwaltung\obj\Debug\Stammdatenverwaltung.njsprojResolveAssemblyReference.cache
-D:\Users\Peri\Documents\GitHub\StammdatenbereitstellungTdoT\Stammdatenverwaltung\Stammdatenverwaltung\bin\Microsoft.NodejsTools.WebRole.dll
