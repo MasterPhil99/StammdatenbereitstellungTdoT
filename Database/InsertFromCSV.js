@@ -26,7 +26,7 @@ if (file){
                             "leaveStand": true,
                             "deleteStand": false,
                             "changeStandSetting": true
-                        }
+                        };
             };
             objs.push(o);
           }
