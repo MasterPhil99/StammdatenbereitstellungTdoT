@@ -384,7 +384,7 @@ router.put('/:id/student', function (req, res, next) {
 				}
 			});
 		}
-	});
+	});	
 });
 
 router.put('/:id/teacher',function (req,res,next) {
