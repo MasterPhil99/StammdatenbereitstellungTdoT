@@ -96,34 +96,11 @@ router.get('/:id/teacher',function(req, res, next) {
     res.send('list of teacher in this stand');
 });
 
-function checkHeaderAndCookie(db, header, cookie) {
-    var uuid;
-
-    if (cookie === undefined || cookie == "") {
-        if (header === undefined || header == "") {
-            uuid = -1;
-        } else {
-            uuid = header;
-        }
-    } else {
-        db.collection('UUIDExpiry').find({ uuid: cookie }).toArray(function (err, resu) {
-            if (typeof resu != undefined && typeof resu[0] != undefined) {
-                uuid = cookie;
-            } else {
-                uuid = -1;
-            }
-        });
-    }
-
-    return uuid;
-}
 
 router.post('/', function (req, res, next) {
     //res.send('update the stand');
-    var stand = req.body;
-    var cookie = req.cookies.uuid;
-    var head = req.headers['uuid'];
-    var uuid = checkHeaderAndCookie(req.db, head, cookie);
+    var stand = req.body; 
+    var uuid = req.uuid;
     
     if (uuid == -1) {
         res.status(401);
@@ -136,14 +113,10 @@ router.post('/', function (req, res, next) {
                 if (cat == "teacher" || cat == "admin") { //maybe use assigned teacher
                     if (stand.name != undefined && stand.name != "") {
                         req.db.collection('stands').find({ name: stand.name }).toArray(function (err, docu) {
-                            if (docu.length > 0) {
+                            if (docu.length <= 0 || docu == undefined) {
                                 try {
                                     req.db.collection('stands').find({ "_id": mongo.ObjectID(stand.id) }).toArray(function (err, result) {
                                         console.log(result);
-                                        //maybe go through all of these values and only set the ones that are actually set (so that the old ones arent overwritten)
-                                        //consider if assigned, teachers and students can be updated here?
-                                        //assigned -> maybe
-                                        //students & teachers -> maybe not? as that is done via "add student/teacher to stand" and remove ..
                                         if (result.length > 0) {
                                             var query = { name: stand.name };
                                             if (stand.description != undefined)
@@ -234,10 +207,8 @@ router.post('/', function (req, res, next) {
 
 router.put('/', function (req, res, next) {
     //res.send('add a new stand, return stand obj with id');
-    var stand = req.body;
-    var cookie = req.cookies.uuid;
-    var head = req.headers['uuid'];
-    var uuid = checkHeaderAndCookie(req.db, head, cookie);
+    var stand = req.body; 
+    var uuid = req.uuid;
 
     if (uuid == -1) {
         res.status(401);
@@ -253,9 +224,6 @@ router.put('/', function (req, res, next) {
                         req.db.collection('stands').find({ name: stand.name }).toArray(function (err, resu) {
                             console.log(resu);
                             if (resu.length <= 0 || resu == undefined) {
-                                if (stand.assigned == undefined) {
-                                    stand.assigned = doc[0]._id;
-                                }
 
                                 if (stand.teachers == undefined) {
                                     stand.teachers = [];
@@ -263,6 +231,11 @@ router.put('/', function (req, res, next) {
 
                                 if (stand.students == undefined) {
                                     stand.students = [];
+                                }
+                                
+                                if (stand.assigned == undefined && cat != "admin") {
+                                    stand.assigned = doc[0]._id;
+                                    stand.teachers.push(doc[0]._id);
                                 }
 
                                 req.db.collection('stands').insertOne({
@@ -313,10 +286,8 @@ router.put('/', function (req, res, next) {
 router.put('/:id/student', function (req, res, next) {
     //res.send('add a student to a stand');
     var standID = req.params.id;
-    var studID = req.body.id;
-    var cookie = req.cookies.uuid;
-    var head = req.headers['uuid'];
-    var uuid = checkHeaderAndCookie(req.db, head, cookie);
+    var studID = req.body.id; 
+    var uuid = req.uuid;
 
     if (uuid == -1) {
         res.status(401);
@@ -385,19 +356,268 @@ router.put('/:id/student', function (req, res, next) {
 });
 
 router.put('/:id/teacher',function (req,res,next) {
-    res.send('add a teacher to a stand');
+    //res.send('add a teacher to a stand');
+	var standID = req.params.id;
+    var teachID = req.body.id; 
+    var uuid = req.uuid;
+
+    if (uuid == -1) {
+        res.status(401);
+        res.send("You need to be logged in to use this feature!");
+    } else {
+        req.db.collection('users').find({ uuid: uuid }).toArray(function (err, doc) {
+            if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
+                var cat = doc[0].category;
+                console.log(cat);
+                if (cat == "teacher" || cat == "admin") {
+                    try {
+                        standID = new mongo.ObjectID(standID);
+                        req.db.collection('stands').find({ _id: standID }).toArray(function (err, docu) {
+                            if (typeof docu != undefined && docu.length > 0 && typeof docu[0] != undefined) {
+                                try {
+                                    teacherID = new mongo.ObjectID(teachID);
+                                    req.db.collection('users').find({ _id: teacherID }).toArray(function (err, docum) {
+                                        if (typeof docum != undefined && docum.length > 0 && typeof docum[0] != undefined) {
+
+                                            for (var key in docu[0].students) {
+                                                docu[0].teachers[key] = docu[0].students[key] + "";
+                                            }
+
+                                            if (docu[0].teachers.includes(teacherID + "")) {
+                                                res.status(400);
+                                                res.send("Teacher already in stand!");
+                                            } else {
+                                                req.db.collection('stands').updateOne({ _id: standID }, {
+                                                    $addToSet: {
+                                                        "teachers": teacherID
+                                                    }
+                                                });
+                                                res.send("Successfully added teacher to stand!");
+                                            }
+                                        }
+                                        else {
+                                            res.status(404);
+                                            res.send("This Teacher does not exist!");
+                                        }
+                                    });
+                                } catch (err) {
+                                    res.status(400);
+                                    res.send("Invalid Teacher ID! " + err.message);
+                                }
+                            }
+                            else {
+                                res.status(404);
+                                res.send("This stand does not exist!");
+                            }
+                        });
+                    } catch (err) {
+                        res.status(400);
+                        res.send("Invalid Stand ID! " + err.message);
+                    }
+                }
+                else {
+                    res.status(403);
+                    res.send("Unauthorized to add a teacher to a stand!");
+                }
+            } else {
+                res.status(401);
+                res.send("You need to be logged in to use this feature!");
+            }
+        });
+    }
 });
 
 router.delete('/:id',function (req, res, next) {
-   res.send('Delete a stand');
+    //res.send('Delete a stand');
+    var standID = req.params.id;
+    var studID = req.body.id;
+    var uuid = req.uuid;
+
+    if (uuid == -1) {
+        res.status(401);
+        res.send("You need to be logged in to use this feature!");
+    } else {
+        req.db.collection('users').find({ uuid: uuid }).toArray(function (err, doc) {
+            if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
+                var cat = doc[0].category;
+                console.log(cat);
+                if (cat == "teacher" || cat == "admin") {
+                    try {
+                        standID = new mongo.ObjectID(standID);
+                        req.db.collection('stands').find({ _id: standID }).toArray(function (err, docu) {
+                            if (typeof docu != undefined && docu.length > 0 && typeof docu[0] != undefined) {
+                                req.db.collection('stands').deleteOne({ _id: standID });
+                                res.send("Stand successfully deleted!");
+                                //notify
+                            }
+                            else {
+                                res.status(404);
+                                res.send("This stand does not exist!");
+                            }
+                        });
+                    } catch (err) {
+                        res.status(400);
+                        res.send("Invalid Stand ID! " + err.message);
+                    }
+                }
+                else {
+                    res.status(403);
+                    res.send("Unauthorized to delete a stand!");
+                }
+            } else {
+                res.status(401);
+                res.send("You need to be logged in to use this feature!");
+            }
+        });
+    }
 });
 
 router.delete('/:id/student',function (req, res, next) {
-    res.send('Remove a student from a stand');
+    //res.send('Remove a student from a stand');
+    var standID = req.params.id;
+    var studID = req.body.id; 
+    var uuid = req.uuid;
+
+    if (uuid == -1) {
+        res.status(401);
+        res.send("You need to be logged in to use this feature!");
+    } else {
+        req.db.collection('users').find({ uuid: uuid }).toArray(function (err, doc) {
+            if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
+                var cat = doc[0].category;
+                console.log(cat);
+                if (cat == "teacher" || cat == "admin") {
+                    try {
+                        standID = new mongo.ObjectID(standID);
+                        req.db.collection('stands').find({ _id: standID }).toArray(function (err, docu) {
+                            if (typeof docu != undefined && docu.length > 0 && typeof docu[0] != undefined) {
+                                try {
+                                    studentID = new mongo.ObjectID(studID);
+                                    req.db.collection('users').find({ _id: studentID }).toArray(function (err, docum) {
+                                        if (typeof docum != undefined && docum.length > 0 && typeof docum[0] != undefined) {
+
+                                            for (var key in docu[0].students) {
+                                                docu[0].students[key] = docu[0].students[key] + "";
+                                            }
+
+                                            if (docu[0].students.includes(studentID + "")) {
+
+                                                //check if this rly works
+                                                req.db.collection('stands').updateOne({ _id: standID }, {
+                                                    $pull: { students: studentID }
+                                                });
+
+                                                res.send("Successfully removed student from stand!"); //check if assigned -> also remove? but maybe not
+                                                //also notify w msg.js
+                                            } else {
+                                                res.status(400);
+                                                res.send("Student not in stand!");
+                                            }
+                                        }
+                                        else {
+                                            res.status(404);
+                                            res.send("This Student does not exist!");
+                                        }
+                                    });
+                                } catch (err) {
+                                    res.status(400);
+                                    res.send("Invalid Student ID! " + err.message);
+                                }
+                            }
+                            else {
+                                res.status(404);
+                                res.send("This stand does not exist!");
+                            }
+                        });
+                    } catch (err) {
+                        res.status(400);
+                        res.send("Invalid Stand ID! " + err.message);
+                    }
+                }
+                else {
+                    res.status(403);
+                    res.send("Unauthorized to add a student to a stand!");
+                }
+            } else {
+                res.status(401);
+                res.send("You need to be logged in to use this feature!");
+            }
+        });
+    }
 });
 
 router.delete('/:id/teacher',function (req, res, next) {
-    res.send('Remove a teacher from a stand');
+    //res.send('Remove a teacher from a stand');
+    var standID = req.params.id;
+    var teachID = req.body.id; 
+    var uuid = req.uuid;
+
+    if (uuid == -1) {
+        res.status(401);
+        res.send("You need to be logged in to use this feature!");
+    } else {
+        req.db.collection('users').find({ uuid: uuid }).toArray(function (err, doc) {
+            if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
+                var cat = doc[0].category;
+                console.log(cat);
+                if (cat == "teacher" || cat == "admin") {
+                    try {
+                        standID = new mongo.ObjectID(standID);
+                        req.db.collection('stands').find({ _id: standID }).toArray(function (err, docu) {
+                            if (typeof docu != undefined && docu.length > 0 && typeof docu[0] != undefined) {
+                                try {
+                                    teacherID = new mongo.ObjectID(teachID);
+                                    req.db.collection('users').find({ _id: teacherID }).toArray(function (err, docum) {
+                                        if (typeof docum != undefined && docum.length > 0 && typeof docum[0] != undefined) {
+
+                                            for (var key in docu[0].teachers) {
+                                                docu[0].teachers[key] = docu[0].students[key] + "";
+                                            }
+
+                                            if (docu[0].teachers.includes(teacherID + "")) {
+
+                                                //check if this rly works
+                                                req.db.collection('stands').updateOne({ _id: standID }, {
+                                                    $pull: { teachers: teacherID }
+                                                });
+
+                                                res.send("Successfully removed teacher from stand!"); //check if assigned -> also remove? but maybe not
+                                                //also notify w msg.js
+                                            } else {
+                                                res.status(400);
+                                                res.send("Teacher not in stand!");
+                                            }
+                                        }
+                                        else {
+                                            res.status(404);
+                                            res.send("This Teacher does not exist!");
+                                        }
+                                    });
+                                } catch (err) {
+                                    res.status(400);
+                                    res.send("Invalid Teacher ID! " + err.message);
+                                }
+                            }
+                            else {
+                                res.status(404);
+                                res.send("This stand does not exist!");
+                            }
+                        });
+                    } catch (err) {
+                        res.status(400);
+                        res.send("Invalid Stand ID! " + err.message);
+                    }
+                }
+                else {
+                    res.status(403);
+                    res.send("Unauthorized to add a teacher to a stand!");
+                }
+            } else {
+                res.status(401);
+                res.send("You need to be logged in to use this feature!");
+            }
+        });
+    }
 });
 
 module.exports = router;

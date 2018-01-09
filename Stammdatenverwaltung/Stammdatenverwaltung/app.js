@@ -9,9 +9,9 @@ var cors = require('cors');
 
 
 var index = require('./routes/index');
-var student = require('./routes/student');
-var stand = require('./routes/stand');
-var teacher = require('./routes/teacher');
+var students = require('./routes/students');
+var stands = require('./routes/stands');
+var teachers = require('./routes/teachers');
 var login = require('./routes/login');
 
 var db;
@@ -47,10 +47,35 @@ app.use(function (req, res, next) {
 });
 
 
+app.use(function (req, res, next) {
+    var stand = req.body;
+    var cookie = req.cookies.uuid;
+    var header = req.headers['uuid'];
+        
+    if (cookie === undefined || cookie == "") {
+        if (header === undefined || header == "") {
+            req.uuid = -1;
+        } else {
+            req.uuid = header;
+        }
+        next();
+    } else {
+        req.db.collection('UUIDExpiry').find({ uuid: cookie }).toArray(function (err, resu) {
+            if (typeof resu != undefined && typeof resu[0] != undefined) {
+                req.uuid = cookie;
+            } else {
+                req.uuid = -1;
+            }
+            next();
+        });
+    }
+
+});
+
 app.use('/', index);
-app.use('/student',student);
-app.use('/teacher',teacher);
-app.use('/stand', stand);
+app.use('/students',students);
+app.use('/teachers',teachers);
+app.use('/stands', stands);
 app.use('/login', login);
 
 

@@ -6,13 +6,32 @@ var ActiveDirectory = require('activedirectory');
 var config = {
     url: 'LDAP://minerva.htl-vil.local',
     baseDN: 'ou=Users,dc=htl-vil,dc=local',
-    username: 'htl-vil\\maurerp',
+    username: 'htl-vil\\',
     password: ''
 }
 var ad = new ActiveDirectory(config);
 var base = 'ou=Users,dc=htl-vil,dc=local';
 
-//'der gesamte string in einem: LDAP:\\minerva.htl-vil.local/ou=Users,dc=htl-vil,dc=local[:Port] wobei der optionale Port 636 (SSL) oder 389 ist
+router.get('/me', function (req, res, next) {
+    //res.send('login/me');
+    var uuid = req.uuid;
+
+    if (uuid == -1) {
+        res.status(401);
+        res.send("You need to be logged in to use this feature!");
+    } else {
+        req.db.collection('users').find({ uuid: uuid }).toArray(function (err, doc) {
+            if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
+                var userToReturn = doc[0];
+                delete userToReturn.password;
+                res.send(userToReturn);
+            } else {
+                res.status(401);
+                res.send("You need to be logged in to use this feature!");
+            }
+        });
+    }
+});
 
 router.get('/', function (req, res, next) {
     var uName = req.headers['username'];
@@ -37,45 +56,46 @@ router.get('/', function (req, res, next) {
                 //console.log(decPwd);
 
                 if (doc[0].category == 'student') {
-                    ad.authenticate(uName, decPwd, function (err, auth) {
+                    ad.authenticate("htl-vil\\" + uName, decPwd, function (err, auth) {
                         if (err) {
+                            //
                             res.status(400);
                             res.send("AD Error! " + JSON.stringify(err));
-                        }
+                        } else {
+                            if (auth) {
+                                console.log('Authenticated!');
+                                var expiryTime = 90000;
+                                var uuid = getUuid();
+                                console.log(doc[0]);
+                                console.log(doc[0].uuid);
+                                if (doc[0].uuid == undefined || doc[0].uuid == "") {
+                                    console.log("creating new uuid..");
+                                    res.cookie('uuid', uuid, { maxAge: expiryTime, httpOnly: true });
 
-                        if (auth) {
-                            console.log('Authenticated!');
-                            var expiryTime = 90000;
-                            var uuid = getUuid();
-                            console.log(doc[0]);
-                            console.log(doc[0].uuid);
-                            if (doc[0].uuid == undefined || doc[0].uuid == "") {
-                                console.log("creating new uuid..");
-                                res.cookie('uuid', uuid, { maxAge: expiryTime, httpOnly: true });
+                                    var newUser = JSON.parse(JSON.stringify(doc[0]));
+                                    newUser.uuid = uuid;
+                                    req.db.collection('users').update({ _id: doc[0]._id }, { $set: { uuid: uuid } });
 
-                                var newUser = JSON.parse(JSON.stringify(doc[0]));
-                                newUser.uuid = uuid;
-                                req.db.collection('users').update({ _id: doc[0]._id }, { $set: { uuid: uuid } });
+                                    req.db.collection('UUIDExpiry').createIndex({ createdAt: 1 }, { expireAfterSeconds: expiryTime });
+                                    req.db.collection('UUIDExpiry').insertOne({ uuid: uuid, createdAt: new Date() });
 
-                                req.db.collection('UUIDExpiry').createIndex({ createdAt: 1 }, { expireAfterSeconds: expiryTime });
-                                req.db.collection('UUIDExpiry').insertOne({ uuid: uuid, createdAt: new Date() });
-                                
-                                res.send(newUser);
-                            } else {
-                                var User = JSON.parse(JSON.stringify(doc[0]));
-                                console.log("updating expiry and using old one..");
-                                req.db.collection('UUIDExpiry').createIndex({ createdAt: 1 }, { expireAfterSeconds: expiryTime });
-                                req.db.collection('UUIDExpiry').insertOne({ uuid: uuid, createdAt: new Date() });
+                                    res.send(newUser);
+                                } else {
+                                    var User = JSON.parse(JSON.stringify(doc[0]));
+                                    console.log("updating expiry and using old one..");
+                                    req.db.collection('UUIDExpiry').createIndex({ createdAt: 1 }, { expireAfterSeconds: expiryTime });
+                                    req.db.collection('UUIDExpiry').insertOne({ uuid: uuid, createdAt: new Date() });
 
-                                res.cookie('uuid', User.uuid, { maxAge: expiryTime, httpOnly: true });
+                                    res.cookie('uuid', User.uuid, { maxAge: expiryTime, httpOnly: true });
 
-                                res.send(User);
+                                    res.send(User);
+                                }
                             }
-                        }
-                        else {
-                            console.log('Authentication failed!');
-                            res.status(401);
-                            res.send("AD Authentication failed! Username or Password might be wrong!");
+                            else {
+                                console.log('Authentication failed!');
+                                res.status(401);
+                                res.send("AD Authentication failed! Username or Password might be wrong!");
+                            }
                         }
                     });
                 } else {
@@ -121,9 +141,6 @@ router.get('/', function (req, res, next) {
                 res.send("User not found!");
             }
         });
-
-
-        
     }
 });
 

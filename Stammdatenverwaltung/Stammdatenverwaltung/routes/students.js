@@ -2,8 +2,6 @@ var express = require('express');
 var mongo = require('mongodb');
 var router = express.Router();
 
-//instead of dbcollection('students') db.collection('users) and category = student
-
 router.get('/', function(req, res, next) {
     //res.send('list with all students');
     //needs consideration whether everyone should be able to get a list of students or not

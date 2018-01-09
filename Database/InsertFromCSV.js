@@ -19,7 +19,14 @@ if (file){
               lastname: pupil[1],
               firstname: pupil[2],
               class: pupil[3],
-              category: 'student'
+              category: 'student',
+			  settings: {
+                            "breakChange": true,
+                            "joinStand": true,
+                            "leaveStand": true,
+                            "deleteStand": false,
+                            "changeStandSetting": true
+                        };
             };
             objs.push(o);
           }
