@@ -43,7 +43,7 @@ router.get('/', function(req, res, next) {
         });
     }
     else {
-        req.db.collection('users').find({ category: 'teacher' }, { _id: 1, username: 1 }).toArray(function (err, results) {
+        req.db.collection('users').find({ category: 'teacher' }, { password: 0, category: 0 }).toArray(function (err, results) {
             if (typeof results == undefined || results.length <= 0) {
                 res.status(404);
                 res.send('No existing Teachers!');
