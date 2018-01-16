@@ -132,11 +132,9 @@ router.get('/:id', function (req, res, next) {
                     results[0].id = results[0]._id;
                     results[0].link = req.baseURL + "/student/";
                     results[0].assigned = false;
-                    console.log(doc);
                     if (typeof doc != undefined && doc.length > 0) {
                         results[0].assigned = true;
                         results[0].teacher = doc[0].assigned; //get the entire teacher?
-                        console.log(results[0].teacher);
                         results[0].stand = doc[0];
                     }
 

@@ -53,8 +53,6 @@ router.get('/', function (req, res, next) {
                     decPwd = new Buffer(uPwd, 'base64').toString();
                 }
 
-                //console.log(decPwd);
-
                 if (doc[0].category == 'student') {
                     ad.authenticate("htl-vil\\" + uName, decPwd, function (err, auth) {
 						if (err) {
@@ -72,8 +70,6 @@ router.get('/', function (req, res, next) {
                                 console.log('Authenticated!');
                                 var expiryTime = 90000;
                                 var uuid = getUuid();
-                                console.log(doc[0]);
-                                console.log(doc[0].uuid);
                                 if (doc[0].uuid == undefined || doc[0].uuid == "") {
                                     console.log("creating new uuid..");
                                     res.cookie('uuid', uuid, { maxAge: expiryTime, httpOnly: true });
@@ -109,8 +105,6 @@ router.get('/', function (req, res, next) {
                         if (typeof result != undefined && result.length > 0) {
                             var expiryTime = 90000;
                             var uuid = getUuid();
-                            console.log(result[0]);
-                            console.log(result[0].uuid);
                             if (result[0].uuid == undefined || result[0].uuid == "") {
                                 console.log("creating new uuid..");
                                 res.cookie('uuid', uuid, { maxAge: expiryTime, httpOnly: true });

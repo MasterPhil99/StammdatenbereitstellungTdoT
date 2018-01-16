@@ -46,6 +46,16 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(function (req, res, next) {
+    if (req.method === "OPTIONS") {
+        res.header('Access-Control-Allow-Origin', req.headers.origin);
+    } else {
+        res.header('Access-Control-Allow-Origin', '*');
+    }
+    res.header('Access-Control-Allow-Methods', 'GET,PUT, POST,DELETE');
+
+    next();
+});
 
 app.use(function (req, res, next) {
 	req.baseURL = baseUrl;
@@ -85,17 +95,6 @@ app.use('/teachers', teachers);
 app.use('/stands', stands);
 app.use('/login', login);
 app.use(['/messages', '/message'], msg);
-
-app.use(function (req, res, next) {
-    if (req.method === "OPTIONS") {
-        res.header('Access-Control-Allow-Origin', req.headers.origin);
-    } else {
-        res.header('Access-Control-Allow-Origin', '*');
-    }
-    res.header('Access-Control-Allow-Methods', 'GET,PUT, POST,DELETE');
-
-    next();
-});
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

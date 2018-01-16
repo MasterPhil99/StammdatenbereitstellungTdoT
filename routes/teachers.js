@@ -65,7 +65,6 @@ router.get('/:id',function(req, res, next) {
 
         req.db.collection('users').find({ _id: id, category: 'teacher' }, { password: 0, category: 0 }).toArray(function (err, results) {
             if (typeof results != undefined && results.length > 0 && results[0] != undefined) {
-                console.log(results);
                 results[0].link = req.baseURL + "/teacher";
 
                 res.send(results);
@@ -97,14 +96,11 @@ router.put('/',function (req, res, next) {
                 if (doc[0] != undefined || doc.length > 0) {
                     var cat = doc[0].category;
                     if (cat == "teacher" || cat == "admin") {
-                        console.log(teacher);
-                        console.log(teacher.password);
                         if ((teacher.username != undefined && teacher.username != "") &&
                             (teacher.password != undefined && teacher.password != "") &&
                             (teacher.firstname != undefined && teacher.username != "") &&
                             (teacher.lastname != undefined && teacher.lastname != "")) {
                             req.db.collection('users').find({ username: teacher.username }).toArray(function (err, resu) {
-                                console.log(resu);
                                 if (resu == undefined || resu.length <= 0) {
                                     req.db.collection('users').insertOne({
                                         username: teacher.username,
@@ -161,14 +157,12 @@ router.post('/', function (req, res, next) {
         req.db.collection('users').find({ uuid: uuid }).toArray(function (err, doc) {
             if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
                 var cat = doc[0].category;
-                console.log(cat);
                 if (cat == "teacher" || cat == "admin") { //only the teacher themselves?
                     if (teacher.username != undefined && teacher.username != "") { //which attribute to use? just gonna go w username for now
                         req.db.collection('users').find({ username: teacher.username }).toArray(function (err, docu) {
                             if (docu.length <= 0 || docu == undefined) {
                                 try {
                                     req.db.collection('users').find({ "_id": mongo.ObjectID(teacher.id) }).toArray(function (err, result) {
-                                        console.log(result);
                                         if (result.length > 0) {
                                             var query = { username: teacher.username };
                                             if (teacher.lastname != undefined)

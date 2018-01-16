@@ -43,7 +43,6 @@ router.get('/:id', function (req, res, next) {
         var id = new mongo.ObjectID(req.params.id);
         req.db.collection('stands').find({ _id: id }).toArray(function (err, results) {
             if (typeof results != undefined && results.length > 0 && typeof results[0] != undefined) {
-                console.log(results);
                 results[0].link = req.baseURL + "/stand";
                 
                 req.db.collection('users').find({ category: "student" }).toArray(function (err, doc) {
@@ -109,14 +108,12 @@ router.post('/', function (req, res, next) {
         req.db.collection('users').find({ uuid: uuid }).toArray(function (err, doc) {
             if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
                 var cat = doc[0].category;
-                console.log(cat);
                 if (cat == "teacher" || cat == "admin") { //maybe use assigned teacher
                     if (stand.name != undefined && stand.name != "") {
                         req.db.collection('stands').find({ name: stand.name }).toArray(function (err, docu) {
                             if (docu.length <= 0 || docu == undefined) {
                                 try {
                                     req.db.collection('stands').find({ "_id": mongo.ObjectID(stand.id) }).toArray(function (err, result) {
-                                        console.log(result);
                                         if (result.length > 0) {
                                             var query = { name: stand.name };
                                             if (stand.description != undefined)
@@ -215,14 +212,11 @@ router.put('/', function (req, res, next) {
         res.send("You need to be logged in to use this feature!");
     } else {
         req.db.collection('users').find({ uuid: uuid }).toArray(function (err, doc) {
-            console.log(doc);
             if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
                 var cat = doc[0].category;
-                console.log(cat);
                 if (cat == "teacher" || cat == "admin") {
                     if (typeof stand.name != undefined && stand.name != "") { //check multiple attributes later
                         req.db.collection('stands').find({ name: stand.name }).toArray(function (err, resu) {
-                            console.log(resu);
                             if (resu.length <= 0 || resu == undefined) {
 
                                 if (stand.teachers == undefined) {
@@ -296,7 +290,6 @@ router.put('/:id/student', function (req, res, next) {
         req.db.collection('users').find({ uuid: uuid }).toArray(function (err, doc) {
             if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
                 var cat = doc[0].category;
-                console.log(cat);
                 if (cat == "teacher" || cat == "admin") {
                     try {
                         standID = new mongo.ObjectID(standID);
@@ -368,7 +361,6 @@ router.put('/:id/teacher',function (req,res,next) {
         req.db.collection('users').find({ uuid: uuid }).toArray(function (err, doc) {
             if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
                 var cat = doc[0].category;
-                console.log(cat);
                 if (cat == "teacher" || cat == "admin") {
                     try {
                         standID = new mongo.ObjectID(standID);
@@ -440,7 +432,6 @@ router.delete('/:id',function (req, res, next) {
         req.db.collection('users').find({ uuid: uuid }).toArray(function (err, doc) {
             if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
                 var cat = doc[0].category;
-                console.log(cat);
                 if (cat == "teacher" || cat == "admin") {
                     try {
                         standID = new mongo.ObjectID(standID);
@@ -485,7 +476,6 @@ router.delete('/:id/student',function (req, res, next) {
         req.db.collection('users').find({ uuid: uuid }).toArray(function (err, doc) {
             if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
                 var cat = doc[0].category;
-                console.log(cat);
                 if (cat == "teacher" || cat == "admin") {
                     try {
                         standID = new mongo.ObjectID(standID);
@@ -559,7 +549,6 @@ router.delete('/:id/teacher',function (req, res, next) {
         req.db.collection('users').find({ uuid: uuid }).toArray(function (err, doc) {
             if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
                 var cat = doc[0].category;
-                console.log(cat);
                 if (cat == "teacher" || cat == "admin") {
                     try {
                         standID = new mongo.ObjectID(standID);
