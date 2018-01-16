@@ -43,7 +43,7 @@ router.get('/', function (req, res, next) {
     }
 	else {
         req.db.collection('users').find({ username: uName }).toArray(function (err, doc) {
-            //if (doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
+            if (doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
                 var decPwd;
                 if (typeof Buffer.from === "function") {
                     // Node 5.10+
@@ -142,10 +142,10 @@ router.get('/', function (req, res, next) {
                         }
                     });
                 }
-            //} else {
-            //    res.status(404);
-            //    res.send("User not found!");
-            //}
+            } else {
+                res.status(404);
+                res.send("User not found!");
+            }
         });
     }
 });

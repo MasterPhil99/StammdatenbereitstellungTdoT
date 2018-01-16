@@ -7,6 +7,11 @@ var bodyParser = require('body-parser');
 
 var cors = require('cors');
 
+var https = require('https');
+var options = {
+    key: fs.readFileSync("server.key"),
+    cert: fs.readFileSync("server.crt")
+}
 
 var index = require('./routes/index');
 var students = require('./routes/students');
@@ -100,7 +105,11 @@ app.use(function (err, req, res, next) {
 MongoClient.connect('mongodb://127.0.0.1:27017/pupilmgmt', (err, database) => {
 	if (err) throw err;
 	db = database;
-	app.listen(port, () => {
+	/*app.listen(port, () => {
 		console.log("Listen to port " + port);
-	});
+    });*/
+
+    https.createServer(options, app).listen(port, () => {
+        console.log("Listen to port " + port);
+    });
 });
