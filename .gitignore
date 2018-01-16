@@ -1,6 +1,8 @@
-/Stammdatenverwaltung/Stammdatenverwaltung/node_modules
+/node_modules
 /Database/SchülerListe2017_18.csv
 /Database/Benutzerliste.csv
 /Database/node_modules
 Stammdatenverwaltung/.vs/Stammdatenverwaltung/v14/.suo
-Stammdatenverwaltung/.vs/Stammdatenverwaltung/v14/.suo
+.vs/Stammdaten/v14/.suo
+/server.key
+/server.crt
