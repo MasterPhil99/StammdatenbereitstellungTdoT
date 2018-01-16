@@ -46,7 +46,7 @@ router.get('/', function(req, res, next) {
         req.db.collection('users').find({ category: 'teacher' }, { _id: 1, username: 1 }).toArray(function (err, results) {
             if (typeof results == undefined || results.length <= 0) {
                 res.status(404);
-                res.send('Teacher not found!');
+                res.send('No existing Teachers!');
             } else {
                 for (var item in results) {
                     results[item].id = results[item]._id;
