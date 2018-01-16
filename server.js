@@ -23,7 +23,7 @@ var login = require('./routes/login');
 var db;
 
 var port = 3000;
-var baseUrl = 'http://127.0.0.1:' + port;
+var baseUrl = 'https://127.0.0.1:' + port;
 
 var MongoClient = require('mongodb').MongoClient;
 

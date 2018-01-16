@@ -3,9 +3,9 @@ var router = express.Router();
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-    res.send({student:req.baseURL+'/student',
-        teacher:req.baseURL+'/teacher',
-        stand:req.baseURL+'/stand'});
+    res.send({student:req.baseURL+'/students',
+        teacher:req.baseURL+'/teachers',
+        stand:req.baseURL+'/stands'});
 });
 
 module.exports = router;
