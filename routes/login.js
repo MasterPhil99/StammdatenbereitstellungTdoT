@@ -13,7 +13,7 @@ var ad = new ActiveDirectory(config);
 var base = 'ou=Users,dc=htl-vil,dc=local';
 
 router.get('/me', function (req, res, next) {
-    //res.send('login/me');
+    res.send('login/me');
     var uuid = req.uuid;
 
     if (uuid == -1) {
@@ -43,7 +43,7 @@ router.get('/', function (req, res, next) {
     }
 	else {
         req.db.collection('users').find({ username: uName }).toArray(function (err, doc) {
-            //if (doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
+            if (doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
                 var decPwd;
                 if (typeof Buffer.from === "function") {
                     // Node 5.10+
@@ -59,13 +59,19 @@ router.get('/', function (req, res, next) {
                     ad.authenticate("htl-vil\\" + uName, decPwd, function (err, auth) {
 						if (err) {
 							var errObj = JSON.parse(JSON.stringify(err));
-							if (errObj.lde_message.includes("AcceptSecurityContext")) {
-								res.status(401);
-								res.send("Authentication failed! Username or Password might be wrong!");
+							if (errObj != undefined && errObj.lde_message != undefined) {
+								if (errObj.lde_message.includes("AcceptSecurityContext")) {
+									res.status(401);
+									res.send("Authentication failed! Username or Password might be wrong!");
+								}
+								else {
+									res.status(500);
+									res.send(JSON.stringify(err));
+								}
 							}
 							else {
-								res.status(500);
-								res.send(JSON.stringify(err));
+								res.status(400);
+								res.send("Bad Request!");
 							}
                         } else {
                             if (auth) {
@@ -142,28 +148,13 @@ router.get('/', function (req, res, next) {
                         }
                     });
                 }
-            //} else {
-            //    res.status(404);
-            //    res.send("User not found!");
-            //}
+            } else {
+                res.status(404);
+                res.send("User not found!");
+            }
         });
     }
 });
-
-/*
-router.get('/', function (req, res, next) {
-    //res.send('login');
-    var uName = req.headers['username'];
-    var uPwd = req.headers['password'];
-
-    if (uName == undefined || uPwd == undefined) {
-        res.status(400);
-        res.send("Bad Request! Username and Password must be defined!");
-    }
-    else {
-        
-    }
-});*/
 
 function getUuid() {
     function s4() {
