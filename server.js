@@ -84,7 +84,7 @@ app.use('/students', students);
 app.use('/teachers', teachers);
 app.use('/stands', stands);
 app.use('/login', login);
-app.use('/messages', msg);
+app.use(['/messages', '/message'], msg);
 
 
 // catch 404 and forward to error handler
