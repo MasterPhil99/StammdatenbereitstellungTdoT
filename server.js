@@ -63,6 +63,42 @@ app.use(function (req, res, next) {
 	next();
 });
 
+app.use(function (req, res, next) {
+    var url = req.originalUrl;
+    console.log(url);
+    if (url != '/login/' && url != '/login' && url != 'login') {
+        var uuid = req.headers['uuid'];
+        if (typeof uuid == 'undefined') {
+            res.status(401);
+            res.send({ "info": "UUID must be set", "link": req.baseURL })
+        } else {
+            req.db.collection('users').find({ uuid: uuid }).toArray(function (err, results) {
+                if (results.length > 0) {
+                    var result = results[0];
+                    result.id = result._id;
+                    delete result._id;
+                    if (typeof (result.settings) === 'undefined') {
+                        settings = {
+                            "breakChange": true,
+                            "joinStand": true,
+                            "leaveStand": true,
+                            "deleteStand": false,
+                            "changeStandSetting": true
+                        };
+                        result.settings = settings;
+                    }
+                    req.user = result;
+                    next();
+                } else {
+                    res.status(401);
+                    res.send({ "info": "UUID " + uuid + " is wrong", "link": req.baseURL })
+                }
+            });
+        }
+    } else {
+        next();
+    }
+});
 
 app.use(function (req, res, next) {
 	var stand = req.body;
