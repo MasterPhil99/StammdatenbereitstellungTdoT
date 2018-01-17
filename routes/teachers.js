@@ -65,6 +65,7 @@ router.get('/:id',function(req, res, next) {
 
         req.db.collection('users').find({ _id: id, category: 'teacher' }, { password: 0, category: 0 }).toArray(function (err, results) {
             if (typeof results != undefined && results.length > 0 && results[0] != undefined) {
+                results[0].id = results[0]._id;
                 results[0].link = req.baseURL + "/teacher";
 
                 res.send(results);

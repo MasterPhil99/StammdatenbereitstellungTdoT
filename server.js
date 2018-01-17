@@ -11,7 +11,7 @@ var https = require('https');
 var options = {
     key: fs.readFileSync("./server.key"),
     cert: fs.readFileSync("./server.crt"),
-    passphrase: 'ourpassphrase'
+    passphrase: 'asdff'
 }
 
 var index = require('./routes/index');

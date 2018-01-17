@@ -3,6 +3,7 @@ var MongoClient = require('mongodb').MongoClient;
 
 var usage = "node \"'InsertFromCSV'.js\" [file to load students from]";
 var file = "./BenutzerListe.csv"; //process.argv[2];
+
 if (file){
   MongoClient.connect('mongodb://127.0.0.1:27017/pupilmgmt', (err, database) => {
     if (err) 
@@ -13,22 +14,24 @@ if (file){
         var objs = [];
         for(var line of data.split('\r\n')){
           if (line != ""){
-            var pupil = line.split(',');
-            var o = {
-              username: pupil[0],
-              lastname: pupil[1],
-              firstname: pupil[2],
-              class: pupil[3],
-              category: 'student',
-			  settings: {
-                            "breakChange": true,
-                            "joinStand": true,
-                            "leaveStand": true,
-                            "deleteStand": false,
-                            "changeStandSetting": true
-                        }
-            };
-            objs.push(o);
+            var pupil = line.split(';');
+			if(pupil[5] != 'Unterricht') {
+				var o = {
+				  username: pupil[0],
+				  lastname: pupil[1],
+				  firstname: pupil[2],
+				  class: pupil[4],
+				  category: 'student',
+				  settings: {
+								"breakChange": true,
+								"joinStand": true,
+								"leaveStand": true,
+								"deleteStand": false,
+								"changeStandSetting": true
+							}
+				};
+				objs.push(o);
+			}
           }
         }      
         database.collection('users').insertMany(objs, function (err, res) {

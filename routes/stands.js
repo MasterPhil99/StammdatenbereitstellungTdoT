@@ -46,6 +46,7 @@ router.get('/:id', function (req, res, next) {
                 results[0].link = req.baseURL + "/stand";
                 
                 req.db.collection('users').find({ category: "student" }).toArray(function (err, doc) {
+                    results[0].id = results[0]._id;
                     var tobecontained = results[0].students;
 
                     for (var key in tobecontained) {

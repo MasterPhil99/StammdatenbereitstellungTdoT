@@ -76,6 +76,7 @@ router.get('/', function (req, res, next) {
 
                                     var newUser = JSON.parse(JSON.stringify(doc[0]));
                                     newUser.uuid = uuid;
+                                    newUser.id = newUser._id;
                                     req.db.collection('users').update({ _id: doc[0]._id }, { $set: { uuid: uuid } });
 
                                     req.db.collection('UUIDExpiry').createIndex({ createdAt: 1 }, { expireAfterSeconds: expiryTime });
@@ -84,6 +85,7 @@ router.get('/', function (req, res, next) {
                                     res.send(newUser);
                                 } else {
                                     var User = JSON.parse(JSON.stringify(doc[0]));
+                                    User.id = User._id;
                                     console.log("updating expiry and using old one..");
                                     req.db.collection('UUIDExpiry').createIndex({ createdAt: 1 }, { expireAfterSeconds: expiryTime });
                                     req.db.collection('UUIDExpiry').insertOne({ uuid: uuid, createdAt: new Date() });
@@ -110,6 +112,7 @@ router.get('/', function (req, res, next) {
                                 res.cookie('uuid', uuid, { maxAge: expiryTime, httpOnly: true });
 
                                 var newUser = JSON.parse(JSON.stringify(result[0]));
+                                newUser.id = newUser._id;
                                 newUser.uuid = uuid;
                                 delete newUser.password;
                                 req.db.collection('users').update({ _id: result[0]._id }, { $set: { uuid: uuid } });
@@ -121,6 +124,7 @@ router.get('/', function (req, res, next) {
                                 res.send(newUser);
                             } else {
                                 var User = JSON.parse(JSON.stringify(result[0]));
+                                User.id = User._id;
                                 delete User.password;
                                 console.log("updating expiry and using old one..");
                                 req.db.collection('UUIDExpiry').createIndex({ createdAt: 1 }, { expireAfterSeconds: expiryTime });
