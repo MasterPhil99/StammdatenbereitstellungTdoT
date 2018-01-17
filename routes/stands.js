@@ -41,42 +41,42 @@ router.get('/:id', function (req, res, next) {
     //no need to check authorization -> everyone can see the stands
     try {
         var id = new mongo.ObjectID(req.params.id);
-        req.db.collection('stands').find({ _id: id }).toArray(function (err, results) {
-            if (typeof results != undefined && results.length > 0 && typeof results[0] != undefined) {
+        req.db.collection('stands').aggregate([{
+            "$match": {
+                "_id": id
+            }
+            },
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "students",
+                    "foreignField": "_id",
+                    "as": "students"
+                }
+            },
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "teachers",
+                    "foreignField": "_id",
+                    "as": "teachers"
+                }
+            }
+        ]).toArray(function (err, results) {
+            if (results != undefined && results.length > 0 && typeof results[0] != undefined) {
                 results[0].link = req.baseURL + "/stand";
-                
-                req.db.collection('users').find({ category: "student" }).toArray(function (err, doc) {
-                    results[0].id = results[0]._id;
-                    var tobecontained = results[0].students;
+                results[0].id = results[0]._id;
+                var idx = 0;
 
-                    for (var key in tobecontained) {
-                        tobecontained[key] = tobecontained[key] + "";
-                    }
-                    
-                    var result = doc.filter(element => {
-                       return (tobecontained.indexOf(element._id+"") > -1);
-                    });
-                    
-                    var returnStand = JSON.parse(JSON.stringify(results[0]));
-                    returnStand.students = result;
+                for (idx = 0; idx < results[0].students.length; idx++) {
+                    results[0].students[idx].id = results[0].students[idx]._id;
+                }
 
-                    /*
-                    req.db.collection('users').find({ category: "teacher" }).toArray(function (err, docs) {
-                        var tobecontainedA = results[0].assigned; //and later also results[0].teachers
+                for (idx = 0; idx < results[0].teachers.length; idx++) {
+                    results[0].teachers[idx].id = results[0].teachers[idx]._id;
+                }
 
-                        for (var k in tobecontainedA) {
-                            tobecontainedA[k] = tobecontainedA[k] + "";
-                        }
-
-                        var result = docs.filter(element => {
-                            return (tobecontainedA.indexOf(element._id + "") > -1);
-                        });
-
-                        //returnStand = JSON.parse(JSON.stringify(results[0]));
-                        returnStand.assigned = result;
-                    });*/
-                    res.send(returnStand);
-                });
+                res.send(results[0]);
             } else {
                 res.status(404);
                 res.send("Stand not found!");
