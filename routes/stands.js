@@ -398,10 +398,10 @@ router.put('/', function (req, res, next) {
     }
 });
 
-router.put('/:id/student', function (req, res, next) {
-    //res.send('add a student to a stand');
+router.put('/:id/user', function (req, res, next) {
+    //res.send('add a student or a teacher to a stand');
     var standID = req.params.id;
-    var studID = req.body.id; 
+    var usID = req.body.id; 
     var uuid = req.uuid;
 
     if (uuid == -1) {
@@ -416,34 +416,77 @@ router.put('/:id/student', function (req, res, next) {
                         standID = new mongo.ObjectID(standID);
                         req.db.collection('stands').find({ _id: standID }).toArray(function (err, docu) {
                             if (typeof docu != undefined && docu.length > 0 && typeof docu[0] != undefined) {
+                                docu[0].id = docu[0]._id;
                                 try {
-                                    studentID = new mongo.ObjectID(studID);
-                                    req.db.collection('users').find({ _id: studentID }).toArray(function (err, docum) {
+                                    var userID = new mongo.ObjectID(usID);
+                                    req.db.collection('users').find({ _id: userID }).toArray(function (err, docum) {
                                         if (typeof docum != undefined && docum.length > 0 && typeof docum[0] != undefined) {
 
-                                            for (var key in docu[0].students) {
-                                                docu[0].students[key] = docu[0].students[key] + "";
-                                            }
+                                            if (docum[0].category == "student") {
+                                                for (var key in docu[0].students) {
+                                                    docu[0].students[key] = docu[0].students[key] + "";
+                                                }
 
-                                            if (docu[0].students != undefined) {
-                                                if (docu[0].students.includes(studentID + "")) {
-                                                    res.status(400);
-                                                    res.send("Student already in stand!");
-                                                } else {
-                                                    addStudentToStand(req, res, standID, studentID, docum);
+                                                if (docu[0].students != undefined) {
+                                                    if (docu[0].students.includes(userID + "")) {
+                                                        res.status(400);
+                                                        res.send("Student already in stand!");
+                                                    } else {
+                                                        req.db.collection('stands').updateOne({ _id: standID }, {
+                                                            $addToSet: {
+                                                                "students": userID
+                                                            }
+                                                        });
+
+                                                        if (!(req.user.id + "" == docum[0]._id + "") && (typeof (docum[0].settings) === 'undefined' || docum[0].settings.leaveStand)) {
+                                                            sendMsgToUser(req.db, req.user.id, docum[0]._id, "Standeinstellungen wurden geupdated");
+                                                        }
+
+                                                        req.db.collection('stands').find({ _id: standID }).toArray(function (err, resu) {
+                                                            res.send(resu[0]);
+                                                        });
+                                                    }
                                                 }
                                             } else {
-                                                addStudentToStand(req, res, standID, studentID, docum);
+                                                if (docum[0].category == "teacher") {
+                                                    for (var key in docu[0].teachers) {
+                                                        docu[0].teachers[key] = docu[0].teachers[key] + "";
+                                                    }
+
+                                                    if (docu[0].teachers != undefined) {
+                                                        if (docu[0].teachers.includes(userID + "")) {
+                                                            res.status(400);
+                                                            res.send("Teacher already in stand!");
+                                                        } else {
+                                                            req.db.collection('stands').updateOne({ _id: standID }, {
+                                                                $addToSet: {
+                                                                    "teachers": userID
+                                                                }
+                                                            });
+
+                                                            if (!(req.user.id + "" == docum[0]._id + "") && (typeof (docum[0].settings) === 'undefined' || docum[0].settings.leaveStand)) {
+                                                                sendMsgToUser(req.db, req.user.id, docum[0]._id, "Standeinstellungen wurden geupdated");
+                                                            }
+
+                                                            req.db.collection('stands').find({ _id: standID }).toArray(function (err, resu) {
+                                                                res.send(resu[0]);
+                                                            });
+                                                        }
+                                                    }
+                                                } else {
+                                                    res.status(400);
+                                                    res.send("Only Teachers and Students can be added to a stand!");
+                                                }
                                             }
                                         }
                                         else {
                                             res.status(404);
-                                            res.send("This student does not exist!");
+                                            res.send("This user does not exist!");
                                         }
                                     });
                                 } catch (err) {
                                     res.status(400);
-                                    res.send("Invalid Student ID! " + err.message);
+                                    res.send("Invalid User ID! " + err.message);
                                 }
                             }
                             else {
@@ -458,7 +501,7 @@ router.put('/:id/student', function (req, res, next) {
                 }
                 else {
                     res.status(403);
-                    res.send("Unauthorized to add a student to a stand!");
+                    res.send("Unauthorized to add someone to a stand!");
                 }
             } else {
                 res.status(401);
@@ -468,33 +511,6 @@ router.put('/:id/student', function (req, res, next) {
     }
 });
 
-function addStudentToStand(req, res, standID, studentID, docum) {
-    req.db.collection('stands').updateOne({ _id: standID }, {
-        $addToSet: {
-            "students": studentID
-        }
-    });
-
-    if (!(req.user.id + "" == docum[0]._id + "") && (typeof (docum[0].settings) === 'undefined' || docum[0].settings.leaveStand)) {
-        sendMsgToUser(req.db, req.user.id, docum[0]._id, "Standeinstellungen wurden geupdated");
-    }
-
-    res.send("Successfully added student to stand!");
-}
-
-function addTeacherToStand(req, res, standID, teacherID, docum) {
-    req.db.collection('stands').updateOne({ _id: standID }, {
-        $addToSet: {
-            "teachers": teacherID
-        }
-    });
-
-    if (!(req.user.id + "" == docum[0]._id + "") && (typeof (docum[0].settings) === 'undefined' || docum[0].settings.leaveStand)) {
-        sendMsgToUser(req.db, req.user.id, docum[0]._id, "Standeinstellungen wurden geupdated");
-    }
-
-    res.send("Successfully added teacher to stand!");
-}
 
 function sendMsgToUser(db, from, to, text) {
     var o = {
@@ -507,76 +523,6 @@ function sendMsgToUser(db, from, to, text) {
         if (err) throw err;
     });
 }
-
-router.put('/:id/teacher',function (req,res,next) {
-    //res.send('add a teacher to a stand');
-	var standID = req.params.id;
-    var teachID = req.body.id; 
-    var uuid = req.uuid;
-
-    if (uuid == -1) {
-        res.status(401);
-        res.send("You need to be logged in to use this feature!");
-    } else {
-        req.db.collection('users').find({ uuid: uuid }).toArray(function (err, doc) {
-            if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
-                var cat = doc[0].category;
-                if (cat == "teacher" || cat == "admin") {
-                    try {
-                        standID = new mongo.ObjectID(standID);
-                        req.db.collection('stands').find({ _id: standID }).toArray(function (err, docu) {
-                            if (typeof docu != undefined && docu.length > 0 && typeof docu[0] != undefined) {
-                                try {
-                                    teacherID = new mongo.ObjectID(teachID);
-                                    req.db.collection('users').find({ _id: teacherID }).toArray(function (err, docum) {
-                                        if (typeof docum != undefined && docum.length > 0 && typeof docum[0] != undefined) {
-
-                                            for (var key in docu[0].students) {
-                                                docu[0].teachers[key] = docu[0].students[key] + "";
-                                            }
-
-                                            if (docu[0].teachers != undefined) {
-                                                if (docu[0].teachers.includes(teacherID + "")) {
-                                                    res.status(400);
-                                                    res.send("Teacher already in stand!");
-                                                } else {
-                                                    addTeacherToStand(req, res, standID, teacherID, docum);
-                                                }
-                                            } else {
-                                                addTeacherToStand(req, res, standID, teacherID, docum);
-                                            }
-                                        }
-                                        else {
-                                            res.status(404);
-                                            res.send("This Teacher does not exist!");
-                                        }
-                                    });
-                                } catch (err) {
-                                    res.status(400);
-                                    res.send("Invalid Teacher ID! " + err.message);
-                                }
-                            }
-                            else {
-                                res.status(404);
-                                res.send("This stand does not exist!");
-                            }
-                        });
-                    } catch (err) {
-                        res.status(400);
-                        res.send("Invalid Stand ID! " + err.message);
-                    }
-                }
-                else {
-                    res.status(403);
-                    res.send("Unauthorized to add a teacher to a stand!");
-                }
-            } else {
-                res.status(401);
-                res.send("You need to be logged in to use this feature!");
-            }
-        });
-    }
-});
 
 router.delete('/:id',function (req, res, next) {
     //res.send('Delete a stand');
@@ -628,10 +574,10 @@ router.delete('/:id',function (req, res, next) {
     }
 });
 
-router.delete('/:id/student',function (req, res, next) {
-    //res.send('Remove a student from a stand');
+router.delete('/:id/user',function (req, res, next) {
+    //res.send('Remove a student or a teacher from a stand');
     var standID = req.params.id;
-    var studID = req.body.id; 
+    var usID = req.body.id; 
     var uuid = req.uuid;
 
     if (uuid == -1) {
@@ -646,128 +592,84 @@ router.delete('/:id/student',function (req, res, next) {
                         standID = new mongo.ObjectID(standID);
                         req.db.collection('stands').find({ _id: standID }).toArray(function (err, docu) {
                             if (typeof docu != undefined && docu.length > 0 && typeof docu[0] != undefined) {
+                                docu[0].id = docu[0]._id;
                                 try {
-                                    studentID = new mongo.ObjectID(studID);
-                                    req.db.collection('users').find({ _id: studentID }).toArray(function (err, docum) {
+                                    var userID = new mongo.ObjectID(usID);
+                                    req.db.collection('users').find({ _id: userID }).toArray(function (err, docum) {
                                         if (typeof docum != undefined && docum.length > 0 && typeof docum[0] != undefined) {
 
-                                            for (var key in docu[0].students) {
-                                                docu[0].students[key] = docu[0].students[key] + "";
-                                            }
+                                            if (docum[0].category == "student") {
+                                                for (var key in docu[0].students) {
+                                                    docu[0].students[key] = docu[0].students[key] + "";
+                                                }
 
-                                            if (docu[0].students != undefined) {
-                                                if (docu[0].students.includes(studentID + "")) {
-                                                    req.db.collection('stands').updateOne({ _id: standID }, {
-                                                        $pull: { students: studentID }
-                                                    });
+                                                if (docu[0].students != undefined) {
+                                                    if (docu[0].students.includes(userID + "")) {
+                                                        req.db.collection('stands').updateOne({ _id: standID }, {
+                                                            $pull: { students: userID }
+                                                        });
 
-                                                    if (!(req.user.id + "" == docum[0]._id + "") && (typeof (docum[0].settings) === 'undefined' || docum[0].settings.leaveStand)) {
-                                                        sendMsgToUser(req.db, req.user.id, docum[0]._id, "Standeinstellungen wurden geupdated");
+                                                        if (!(req.user.id + "" == docum[0]._id + "") && (typeof (docum[0].settings) === 'undefined' || docum[0].settings.leaveStand)) {
+                                                            sendMsgToUser(req.db, req.user.id, docum[0]._id, "Standeinstellungen wurden geupdated");
+                                                        }
+                                                        
+                                                        docu[0].students.pop(userID);
+                                                        res.send(docu[0]);
+                                                    } else {
+                                                        res.status(400);
+                                                        res.send("Student not in stand!");
                                                     }
-
-                                                    res.send(docu[0]);
                                                 } else {
                                                     res.status(400);
-                                                    res.send("Student not in stand!");
+                                                    res.send("No students in stand!");
                                                 }
                                             } else {
-                                                res.status(400);
-                                                res.send("No students in stand!");
-                                            }
-                                        }
-                                        else {
-                                            res.status(404);
-                                            res.send("This Student does not exist!");
-                                        }
-                                    });
-                                } catch (err) {
-                                    res.status(400);
-                                    res.send("Invalid Student ID! " + err.message);
-                                }
-                            }
-                            else {
-                                res.status(404);
-                                res.send("This stand does not exist!");
-                            }
-                        });
-                    } catch (err) {
-                        res.status(400);
-                        res.send("Invalid Stand ID! " + err.message);
-                    }
-                }
-                else {
-                    res.status(403);
-                    res.send("Unauthorized to add a student to a stand!");
-                }
-            } else {
-                res.status(401);
-                res.send("You need to be logged in to use this feature!");
-            }
-        });
-    }
-});
-
-router.delete('/:id/teacher',function (req, res, next) {
-    //res.send('Remove a teacher from a stand');
-    var standID = req.params.id;
-    var teachID = req.body.id; 
-    var uuid = req.uuid;
-
-    if (uuid == -1) {
-        res.status(401);
-        res.send("You need to be logged in to use this feature!");
-    } else {
-        req.db.collection('users').find({ uuid: uuid }).toArray(function (err, doc) {
-            if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
-                var cat = doc[0].category;
-                if (cat == "teacher" || cat == "admin") {
-                    try {
-                        standID = new mongo.ObjectID(standID);
-                        req.db.collection('stands').find({ _id: standID }).toArray(function (err, docu) {
-                            if (typeof docu != undefined && docu.length > 0 && typeof docu[0] != undefined) {
-                                try {
-                                    teacherID = new mongo.ObjectID(teachID);
-                                    req.db.collection('users').find({ _id: teacherID }).toArray(function (err, docum) {
-                                        if (typeof docum != undefined && docum.length > 0 && typeof docum[0] != undefined) {
-
-                                            for (var key in docu[0].teachers) {
-                                                docu[0].teachers[key] = docu[0].students[key] + "";
-                                            }
-
-                                            if (docu[0].teachers != undefined) {
-                                                if (docu[0].teachers.includes(teacherID + "")) {
-
-                                                    if (docu[0].assigned + "" == teacherID + "") {
-                                                        req.db.collection('stands').updateOne({ _id: standID }, { $set: { assigned: null } });
+                                                if (docum[0].category == "teacher") {
+                                                    for (var key in docu[0].teachers) {
+                                                        docu[0].teachers[key] = docu[0].teachers[key] + "";
                                                     }
 
-                                                    req.db.collection('stands').updateOne({ _id: standID }, {
-                                                        $pull: { teachers: teacherID }
-                                                    });
+                                                    if (docu[0].teachers != undefined) {
+                                                        console.log(docu[0].teachers);
+                                                        if (docu[0].teachers.includes(userID + "")) {
 
-                                                    if (!(req.user.id + "" == docum[0]._id + "") && (typeof (docum[0].settings) === 'undefined' || docum[0].settings.leaveStand)) {
-                                                        sendMsgToUser(req.db, req.user.id, docum[0]._id, "Standeinstellungen wurden geupdated");
+                                                            if (docu[0].assigned + "" == userID + "") {
+                                                                req.db.collection('stands').updateOne({ _id: standID }, { $set: { assigned: null } });
+                                                            }
+
+                                                            req.db.collection('stands').updateOne({ _id: standID }, {
+                                                                $pull: { teachers: userID }
+                                                            });
+
+                                                            if (!(req.user.id + "" == docum[0]._id + "") && (typeof (docum[0].settings) === 'undefined' || docum[0].settings.leaveStand)) {
+                                                                sendMsgToUser(req.db, req.user.id, docum[0]._id, "Standeinstellungen wurden geupdated");
+                                                            }
+
+                                                            docu[0].teachers.pop(userID);
+                                                            res.send(docu[0]);
+                                                        } else {
+                                                            res.status(400);
+                                                            res.send("Teacher not in stand!");
+                                                        }
                                                     }
-
-                                                    res.send(docu[0]);
+                                                    else {
+                                                        res.status(400);
+                                                        res.send("No Teacher in stand!");
+                                                    }
                                                 } else {
                                                     res.status(400);
-                                                    res.send("Teacher not in stand!");
+                                                    res.send("Only Teachers and Students can be removed from a stand!");
                                                 }
-                                            }
-                                            else {
-                                                res.status(400);
-                                                res.send("No Teacher in stand!");
-                                            }
+                                            }                                            
                                         }
                                         else {
                                             res.status(404);
-                                            res.send("This Teacher does not exist!");
+                                            res.send("This User does not exist!");
                                         }
                                     });
                                 } catch (err) {
                                     res.status(400);
-                                    res.send("Invalid Teacher ID! " + err.message);
+                                    res.send("Invalid User ID! " + err.message);
                                 }
                             }
                             else {
@@ -782,7 +684,7 @@ router.delete('/:id/teacher',function (req, res, next) {
                 }
                 else {
                     res.status(403);
-                    res.send("Unauthorized to add a teacher to a stand!");
+                    res.send("Unauthorized to remove a User from a stand!");
                 }
             } else {
                 res.status(401);
