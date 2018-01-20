@@ -7,7 +7,7 @@ router.get('/', function(req, res, next) {
     //no need to check authorization -> everyone can see the stands
     var pName = req.query.name;
     if (pName != null) {
-        req.db.collection('stands').find({ name: pName }).toArray(function (err, results) {
+        req.db.collection('stands').find({ name: { $regex: ".*" + pName + ".*"} }).toArray(function (err, results) {
             if (typeof results != undefined && results.length > 0 && typeof results[0] != undefined) {
                 for (var item in results) {
                     results[item].id = results[item]._id;
