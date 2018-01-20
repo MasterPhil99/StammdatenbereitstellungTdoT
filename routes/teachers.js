@@ -228,6 +228,7 @@ router.post('/', function (req, res, next) {
                                         res.send("Error when updating the teacher!");
                                     } else {
                                         if (resu.result.nModified > 0) {
+                                            delete teacher.password;
                                             res.send(teacher);
                                         } else {
                                             res.status(400);
