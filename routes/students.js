@@ -79,7 +79,7 @@ router.get('/', function (req, res, next) {
         });
     }
     else {
-        req.db.collection('users').find({ category: 'student' }, { _id: 1, class: 1, lastname: 1 }).toArray(function (err, results) {
+        req.db.collection('users').find({ category: 'student' }, { category: 0 }).toArray(function (err, results) {
             if (typeof results == undefined || results.length <= 0) {
                 res.status(404);
                 res.send('Student not found!');
