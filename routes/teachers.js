@@ -159,6 +159,7 @@ router.put('/',function (req, res, next) {
                                         }
                                     }, function (err, result) {
 
+                                        delete teacher.password;
                                         console.log("teacher added");
                                         res.status(201);
                                         res.send(teacher);
