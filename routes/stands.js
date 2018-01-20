@@ -137,11 +137,11 @@ router.get('/:id/teacher',function(req, res, next) {
                 console.log(results);
                 results[0].link = req.baseURL + "/stand";
 
-                req.db.collection('users').find({ category: "student" }).toArray(function (err, doc) {
+                req.db.collection('users').find({ category: "teacher" }).toArray(function (err, doc) {
                     var returnStand = JSON.parse(JSON.stringify(results[0]));
 
-                    if (results[0].students != undefined) {
-                        var tobecontained = results[0].students;
+                    if (results[0].teachers != undefined) {
+                        var tobecontained = results[0].teachers;
 
                         for (var key in tobecontained) {
                             tobecontained[key] = tobecontained[key] + "";
@@ -154,7 +154,7 @@ router.get('/:id/teacher',function(req, res, next) {
                         res.send(result);
                     } else {
                         res.status(404);
-                        res.send("No students in stand!");
+                        res.send("No teachers in stand!");
                     }
                 });
             } else {
