@@ -140,7 +140,7 @@ router.put('/',function (req, res, next) {
                     if (cat == "teacher" || cat == "admin") {
                         if ((teacher.username != undefined && teacher.username != "") &&
                             (teacher.password != undefined && teacher.password != "") &&
-                            (teacher.firstname != undefined && teacher.username != "") &&
+                            (teacher.firstname != undefined && teacher.firstname != "") &&
                             (teacher.lastname != undefined && teacher.lastname != "")) {
                             req.db.collection('users').find({ username: teacher.username }).toArray(function (err, resu) {
                                 if (resu == undefined || resu.length <= 0) {
