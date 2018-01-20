@@ -291,7 +291,6 @@ router.put('/', function (req, res, next) {
                     if (typeof stand.name != undefined && stand.name != "") { //check multiple attributes later
                         req.db.collection('stands').find({ name: stand.name }).toArray(function (err, resu) {
                             if (resu.length <= 0 || resu == undefined) {
-
                                 if (stand.deadlineDate == undefined) {
                                     stand.deadlineDate = "02.02.2018";
                                 }
@@ -372,6 +371,7 @@ router.put('/', function (req, res, next) {
                                     "teachers": stand.teachers
                                 }, function (err, result) {
                                     console.log("1 stand inserted '" + stand.name + "'");
+                                    stand = result.ops[0];
                                     stand.id = stand._id;
                                     res.send(stand);
                                 });
