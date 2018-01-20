@@ -36,7 +36,7 @@ router.get('/', function(req, res, next) {
             } else {
                 for (var item in results) {
                     results[item].id = results[item]._id;
-                    results[item].link = req.baseURL + "/teacher/" + results[item].id;
+                    results[item].link = req.baseURL + "/teachers/" + results[item].id;
                 }
                 res.send(results);
             }
@@ -50,7 +50,7 @@ router.get('/', function(req, res, next) {
             } else {
                 for (var item in results) {
                     results[item].id = results[item]._id;
-                    results[item].link = req.baseURL + "/teacher/" + results[item].id
+                    results[item].link = req.baseURL + "/teachers/" + results[item].id
                 }
                 res.send(results);
             }
@@ -66,9 +66,9 @@ router.get('/:id',function(req, res, next) {
         req.db.collection('users').find({ _id: id, category: 'teacher' }, { password: 0, category: 0 }).toArray(function (err, results) {
             if (typeof results != undefined && results.length > 0 && results[0] != undefined) {
                 results[0].id = results[0]._id;
-                results[0].link = req.baseURL + "/teacher";
+                results[0].link = req.baseURL + "/teachers";
 
-                res.send(results);
+                res.send(results[0]);
             } else {
                 res.status(404);
                 res.send("Teacher not found!");

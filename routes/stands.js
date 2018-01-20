@@ -220,6 +220,50 @@ router.put('/', function (req, res, next) {
                         req.db.collection('stands').find({ name: stand.name }).toArray(function (err, resu) {
                             if (resu.length <= 0 || resu == undefined) {
 
+                                if (stand.deadlineDate == undefined) {
+                                    stand.deadlineDate = "02.02.2018";
+                                }
+
+                                if (stand.time0910 == undefined) {
+                                    stand.time0910 = 1;
+                                }
+
+                                if (stand.time1011 == undefined) {
+                                    stand.time1011 = 1;
+                                }
+
+                                if (stand.time1112 == undefined) {
+                                    stand.time1112 = 1;
+                                }
+
+                                if (stand.time1213 == undefined) {
+                                    stand.time1213 = 1;
+                                }
+
+                                if (stand.time1314 == undefined) {
+                                    stand.time1314 = 1;
+                                }
+
+                                if (stand.time1415 == undefined) {
+                                    stand.time1415 = 1;
+                                }
+
+                                if (stand.time1516 == undefined) {
+                                    stand.time1516 = 1;
+                                }
+
+                                if (stand.cbAllowStudentsBreak == undefined) {
+                                    stand.cbAllowStudentsBreak = true;
+                                }
+
+                                if (stand.cbAllowStudentsJoin == undefined) {
+                                    stand.cbAllowStudentsJoin = true;
+                                }
+
+                                if (stand.cbAllowStudentsLeave == undefined) {
+                                    stand.cbAllowStudentsLeave = true;
+                                }
+
                                 if (stand.teachers == undefined) {
                                     stand.teachers = [];
                                 }
@@ -231,6 +275,10 @@ router.put('/', function (req, res, next) {
                                 if (stand.assigned == undefined && cat != "admin") {
                                     stand.assigned = doc[0]._id;
                                     stand.teachers.push(doc[0]._id);
+                                }
+
+                                if (cat == "admin" && stand.assigned == undefined) {
+                                    stand.assigned = "";
                                 }
 
                                 req.db.collection('stands').insertOne({

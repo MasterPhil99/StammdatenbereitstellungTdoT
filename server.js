@@ -20,6 +20,7 @@ var stands = require('./routes/stands');
 var teachers = require('./routes/teachers');
 var login = require('./routes/login');
 var msg = require('./routes/msg');
+var users = require('./routes/users');
 
 var db;
 
@@ -131,6 +132,7 @@ app.use('/teachers', teachers);
 app.use('/stands', stands);
 app.use('/login', login);
 app.use(['/messages', '/message'], msg);
+app.use('/users', users);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

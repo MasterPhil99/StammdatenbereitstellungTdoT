@@ -99,7 +99,7 @@ router.get('/', function(req, res, next) {
                     });*/
 
                     results[item].id = results[item]._id;
-                    results[item].link = req.baseURL + "/student/" + results[item].id;
+                    results[item].link = req.baseURL + "/students/" + results[item].id;
                 }
                 res.send(results);
             }
@@ -109,11 +109,11 @@ router.get('/', function(req, res, next) {
         req.db.collection('users').find({ category: 'student' }, { category: 0 }).toArray(function (err, results) {
             if (typeof results == undefined || results.length <= 0) {
                 res.status(404);
-                res.send('Student not found!');
+                res.send('No students exist!');
             } else {
                 for (var item in results) {
                     results[item].id = results[item]._id;
-                    results[item].link = req.baseURL + "/student/" + results[item].id
+                    results[item].link = req.baseURL + "/students/" + results[item].id
                 }
                 res.send(results);
             }
@@ -130,7 +130,7 @@ router.get('/:id', function (req, res, next) {
             if (typeof results != undefined && results.length > 0 && results[0] != undefined) {
                 req.db.collection('stands').find({ students: results[0]._id }).toArray(function (err, doc) {
                     results[0].id = results[0]._id;
-                    results[0].link = req.baseURL + "/student/";
+                    results[0].link = req.baseURL + "/students/";
                     results[0].assigned = false;
                     if (typeof doc != undefined && doc.length > 0) {
                         doc[0].id = doc[0]._id;
@@ -139,7 +139,7 @@ router.get('/:id', function (req, res, next) {
                         results[0].stand = doc[0];
                     }
 
-                    res.send(results);
+                    res.send(results[0]);
                 });
             } else {
                 res.status(404);
