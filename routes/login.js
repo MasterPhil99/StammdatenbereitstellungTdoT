@@ -24,6 +24,7 @@ router.get('/me', function (req, res, next) {
             if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
                 var userToReturn = doc[0];
                 delete userToReturn.password;
+                userToReturn.id = userToReturn._id;
                 res.send(userToReturn);
             } else {
                 res.status(401);
