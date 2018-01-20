@@ -527,7 +527,6 @@ function sendMsgToUser(db, from, to, text) {
 router.delete('/:id',function (req, res, next) {
     //res.send('Delete a stand');
     var standID = req.params.id;
-    var studID = req.body.id;
     var uuid = req.uuid;
 
     if (uuid == -1) {
@@ -549,6 +548,8 @@ router.delete('/:id',function (req, res, next) {
                                         sendMsgToUser(req.db, req.user.id, docu[0].students[key]._id, "Standeinstellungen wurden geupdated");
                                     }
                                 }
+
+                                delete doc[0].password;
 
                                 res.send(doc[0]);
                             }
