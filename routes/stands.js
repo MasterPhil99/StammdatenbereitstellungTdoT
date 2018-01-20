@@ -496,6 +496,18 @@ function addTeacherToStand(req, res, standID, teacherID, docum) {
     res.send("Successfully added teacher to stand!");
 }
 
+function sendMsgToUser(db, from, to, text) {
+    var o = {
+        text: text,
+        user: to,
+        from: from,
+        time: new Date()
+    };
+    db.collection('msg').insert(o, function (err, result) {
+        if (err) throw err;
+    });
+}
+
 router.put('/:id/teacher',function (req,res,next) {
     //res.send('add a teacher to a stand');
 	var standID = req.params.id;
