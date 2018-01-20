@@ -11,6 +11,8 @@ router.get('/', function(req, res, next) {
     var fnFlag = false;
     var pUserName = req.query.username;
     var unFlag = false;
+    var pFilter = req.query.filter;
+    var filtFlag = false;
     var query = { category: 'teacher' };
 
     if (typeof pLastName != undefined && pLastName != null) {
@@ -28,17 +30,44 @@ router.get('/', function(req, res, next) {
         query.username = pUserName;
     }
 
-    if (lnFlag || fnFlag || unFlag) {
+    if (typeof pFilter != undefined && pFilter != null) {
+        filtFlag = true;
+    }
+
+    if (filtFlag || lnFlag || fnFlag || unFlag) {
         req.db.collection('users').find(query, { password: 0, category: 0 }).toArray(function (err, results) {
             if (typeof results == undefined || results.length <= 0) {
                 res.status(404);
                 res.send('Teacher not found!');
             } else {
+                var resultsToReturn = [];
                 for (var item in results) {
                     results[item].id = results[item]._id;
                     results[item].link = req.baseURL + "/teachers/" + results[item].id;
                 }
-                res.send(results);
+
+                if (filtFlag) {
+                    for (var item in results) {
+                        var teacher = results[item];
+
+                        var filters = pFilter.split(" ");
+                        var correctFilter = true;
+
+                        for (var key in filters) {
+                            var f = filters[key];
+                            if (!checkTeacherFilterOnValue(teacher, f)) {
+                                correctFilter = false; break;
+                            }
+                        }
+                        if (correctFilter) {
+                            resultsToReturn.push(teacher);
+                        }
+                    }
+
+                    res.send(resultsToReturn);
+                } else {
+                    res.send(results);
+                }
             }
         });
     }
@@ -57,6 +86,12 @@ router.get('/', function(req, res, next) {
         });
     }
 });
+
+function checkTeacherFilterOnValue(teacher, filter) {
+    return (teacher.username.toLowerCase().indexOf(filter.toLowerCase()) !== -1 ||
+        teacher.firstname.toLowerCase().indexOf(filter.toLowerCase()) !== -1 ||
+        teacher.lastname.toLowerCase().indexOf(filter.toLowerCase()) !== -1);
+}
 
 router.get('/:id',function(req, res, next) {
     //res.send('exact teacher info');

@@ -13,6 +13,8 @@ router.get('/', function (req, res, next) {
     var cFlag = false;
     var pUserName = req.query.username;
     var unFlag = false;
+    var pFilter = req.query.filter;
+    var filtFlag = false;
     var query = { category: 'student' };
 
     if (typeof pLastName != undefined && pLastName != null) {
@@ -35,7 +37,11 @@ router.get('/', function (req, res, next) {
         query.username = { $regex: ".*" + pUserName + ".*" }
     }
 
-    if (lnFlag || fnFlag || cFlag || unFlag) {
+    if (typeof pFilter != undefined && pFilter != null) {
+        filtFlag = true;
+    }
+
+    if (filtFlag || lnFlag || fnFlag || cFlag || unFlag) {
         req.db.collection('users').find(query, { /*password: 0,*/ category: 0 }).toArray(function (err, results) {
             if (typeof results == undefined || results.length <= 0) {
                 res.status(404);
@@ -46,7 +52,29 @@ router.get('/', function (req, res, next) {
                     results[item].id = results[item]._id;
                     results[item].link = req.baseURL + "/students/" + results[item].id;
                 }
-                res.send(results);
+
+                if (filtFlag) {
+                    for (var item in results) {
+                        var student = results[item];
+
+                        var filters = pFilter.split(" ");
+                        var correctFilter = true;
+
+                        for (var key in filters) {
+                            var f = filters[key];
+                            if (!checkStudentFilterOnValue(student, f)) {
+                                correctFilter = false; break;
+                            }
+                        }
+                        if (correctFilter) {
+                            resultsToReturn.push(student);
+                        }
+                    }
+
+                    res.send(resultsToReturn);
+                } else {
+                    res.send(results);
+                }
             }
         });
     }
@@ -65,6 +93,13 @@ router.get('/', function (req, res, next) {
         });
     }
 });
+
+function checkStudentFilterOnValue(student, filter) {
+    return (student.username.toLowerCase().indexOf(filter.toLowerCase()) !== -1 ||
+        student.firstname.toLowerCase().indexOf(filter.toLowerCase()) !== -1 ||
+        student.lastname.toLowerCase().indexOf(filter.toLowerCase()) !== -1 ||
+        student.class.toLowerCase().indexOf(filter.toLowerCase()) !== -1);
+}
 
 router.get('/:id', function (req, res, next) {
     //res.send('student by id');

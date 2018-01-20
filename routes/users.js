@@ -4,7 +4,7 @@ var router = express.Router();
 
 router.get('/', function (req, res, next) {
     //res.send('list with all users');
-    req.db.collection('users').find({}, { password: 0, category: 0 }).toArray(function (err, results) {
+    req.db.collection('users').find({}, { password: 0 }).toArray(function (err, results) {
         if (typeof results == undefined || results.length <= 0) {
             res.status(404);
             res.send('No User exists!');
@@ -24,7 +24,7 @@ router.get('/:id', function (req, res, next) {
     try {
         var id = new mongo.ObjectID(req.params.id);
 
-        req.db.collection('users').find({ _id: id }, { password: 0, category: 0 }).toArray(function (err, results) {
+        req.db.collection('users').find({ _id: id }, { password: 0 }).toArray(function (err, results) {
             if (typeof results != undefined && results.length > 0 && results[0] != undefined) {
                 res.send(results[0]);
             } else {
