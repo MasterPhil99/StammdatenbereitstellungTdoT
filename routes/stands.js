@@ -183,8 +183,8 @@ router.post('/', function (req, res, next) {
                 var cat = doc[0].category;
                 if (cat == "teacher" || cat == "admin") { //maybe use assigned teacher
                     if (stand.name != undefined && stand.name != "") {
-                        req.db.collection('stands').find({ name: stand.name }).toArray(function (err, docu) {
-                            if (docu.length <= 0 || docu == undefined) {
+                        //req.db.collection('stands').find({ name: stand.name }).toArray(function (err, docu) {
+                            //if (docu.length <= 0 || docu == undefined) {
                                 try {
                                     req.db.collection('stands').find({ "_id": mongo.ObjectID(stand.id) }).toArray(function (err, result) {
                                         if (result.length > 0) {
@@ -252,11 +252,11 @@ router.post('/', function (req, res, next) {
                                     res.status(400);
                                     res.send("Invalid ID! " + err.message);
                                 }
-                            } else {
-                                res.status(400);
-                                res.send("Bad Request! Stand with this name already exists!");
-                            }
-                        });
+                            //} else {
+                            //    res.status(400);
+                            //    res.send("Bad Request! Stand with this name already exists!");
+                            //}
+                        //});
                     }
                     else {
                         res.status(400);
