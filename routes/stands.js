@@ -182,13 +182,18 @@ router.post('/', function (req, res, next) {
             if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
                 var cat = doc[0].category;
                 if (cat == "teacher" || cat == "admin") { //maybe use assigned teacher
-                    if (stand.name != undefined && stand.name != "") {
+                    if (stand.id != undefined && stand.id != "") {
                         //req.db.collection('stands').find({ name: stand.name }).toArray(function (err, docu) {
                             //if (docu.length <= 0 || docu == undefined) {
                                 try {
                                     req.db.collection('stands').find({ "_id": mongo.ObjectID(stand.id) }).toArray(function (err, result) {
                                         if (result.length > 0) {
-                                            var query = { name: stand.name };
+                                            var query = { };
+
+                                            if (stand.name != undefined) {
+                                                query.name = stand.name;
+                                            }
+
                                             if (stand.description != undefined)
                                                 query.description = stand.description;
 
@@ -260,7 +265,7 @@ router.post('/', function (req, res, next) {
                     }
                     else {
                         res.status(400);
-                        res.send("Bad Request! Name must be defined!");
+                        res.send("Bad Request! ID must be defined!");
                     }
                 }
                 else {
