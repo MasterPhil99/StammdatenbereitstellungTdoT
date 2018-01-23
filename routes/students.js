@@ -116,7 +116,7 @@ router.get('/:id', function (req, res, next) {
                         doc[0].id = doc[0]._id;
                         results[0].assigned = true;
                         results[0].teacher = doc[0].assigned;
-                        results[0].stand = doc[0];
+                        results[0].stands = doc;
                     }
 
                     res.send(results[0]);
