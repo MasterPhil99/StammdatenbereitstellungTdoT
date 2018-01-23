@@ -56,16 +56,22 @@ router.get('/', function (req, res, next) {
 
                 if (doc[0].category == 'student') {
                     ad.authenticate("htl-vil\\" + uName, decPwd, function (err, auth) {
-						if (err) {
-							var errObj = JSON.parse(JSON.stringify(err));
-							if (errObj.lde_message.includes("AcceptSecurityContext")) {
-								res.status(401);
-								res.send("Authentication failed! Username or Password might be wrong!");
-							}
-							else {
-								res.status(500);
-								res.send(JSON.stringify(err));
-							}
+                        if (err) {
+                            var errObj = JSON.parse(JSON.stringify(err));
+                            if (errObj != undefined && errObj.lde_message != undefined) {
+                                if (errObj.lde_message.includes("AcceptSecurityContext")) {
+                                    res.status(401);
+                                    res.send("Authentication failed! Username or Password might be wrong!");
+                                }
+                                else {
+                                    res.status(500);
+                                    res.send(JSON.stringify(err));
+                                }
+                            }
+                            else {
+                                res.status(400);
+                                res.send("Bad Request!");
+                            }
                         } else {
                             if (auth) {
                                 console.log('Authenticated!');

@@ -152,6 +152,10 @@ app.use(function (err, req, res, next) {
 	res.render('error');
 });
 
+process.on('uncaughtException', function (err) {
+    console.log(err);
+});
+
 MongoClient.connect('mongodb://127.0.0.1:27017/pupilmgmt', (err, database) => {
 	if (err) throw err;
 	db = database;
