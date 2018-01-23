@@ -353,6 +353,10 @@ router.put('/', function (req, res, next) {
                                     stand.teachers.push(doc[0]._id);
                                 }
 
+                                if (stand.description == undefined) {
+                                    stand.description = "";
+                                }
+
                                 if (cat == "admin" && stand.assigned == undefined) {
                                     stand.assigned = "";
                                 }
