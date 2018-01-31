@@ -2,7 +2,7 @@ var fs = require('fs');
 var MongoClient = require('mongodb').MongoClient;
 
 var usage = "node \"'InsertFromCSV'.js\" [file to load students from]";
-var file = "./BenutzerListe.csv"; //process.argv[2];
+var file = "./Benutzerliste.CSV"; //process.argv[2];
 
 if (file){
   MongoClient.connect('mongodb://127.0.0.1:27017/pupilmgmt', (err, database) => {
@@ -15,12 +15,12 @@ if (file){
         for(var line of data.split('\r\n')){
           if (line != ""){
             var pupil = line.split(';');
-			if(pupil[5] != 'Unterricht') {
+			if(pupil[4] != 'Unterricht' && pupil[4] != 'abgemeldet' /*&& pupil[4] != 'frei gestellt'*/) {
 				var o = {
 				  username: pupil[0],
 				  lastname: pupil[1],
 				  firstname: pupil[2],
-				  class: pupil[4],
+				  class: pupil[3],
 				  category: 'student',
 				  settings: {
 								"breakChange": true,
@@ -30,6 +30,7 @@ if (file){
 								"changeStandSetting": true
 							}
 				};
+				
 				objs.push(o);
 			}
           }

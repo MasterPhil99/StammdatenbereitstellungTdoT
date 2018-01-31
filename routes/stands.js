@@ -188,66 +188,78 @@ router.post('/', function (req, res, next) {
                                 try {
                                     req.db.collection('stands').find({ "_id": mongo.ObjectID(stand.id) }).toArray(function (err, result) {
                                         if (result.length > 0) {
-                                            var query = { };
+                                            //var d = new Date(result[0].deadlineDate);
+                                            //console.log(new Date(result[0].deadlineDate).getTime() > new Date().getTime());
+                                            //console.log(new Date(result[0].deadlineDate).getTime());
+                                            //console.log(new Date().getTime());
+                                            //console.log(d.getDay());
+                                            //console.log(d.getMonth());
+                                            //console.log(d.getFullYear());
+                                            //if (new Date(result[0].deadlineDate).getTime() > new Date().getTime()) {
+                                                var query = {};
 
-                                            if (stand.name != undefined) {
-                                                query.name = stand.name;
-                                            }
-
-                                            if (stand.description != undefined)
-                                                query.description = stand.description;
-
-                                            if (stand.deadlineDate != undefined)
-                                                query.deadlineDate = stand.deadlineDate;
-
-                                            if (stand.time0910 != undefined)
-                                                query.time0910 = stand.time0910;
-
-                                            if (stand.time1011 != undefined)
-                                                query.time1011 = stand.time1011;
-
-                                            if (stand.time1112 != undefined)
-                                                query.time1112 = stand.time1112;
-
-                                            if (stand.time1213 != undefined)
-                                                query.time1213 = stand.time1213;
-
-                                            if (stand.time1314 != undefined)
-                                                query.time1314 = stand.time1314;
-
-                                            if (stand.time1415 != undefined)
-                                                query.time1415 = stand.time1415;
-
-                                            if (stand.time1516 != undefined)
-                                                query.time1516 = stand.time1516;
-                                            
-                                            if (stand.cbAllowStudentsBreak != undefined)
-                                                query.cbAllowStudentsBreak = stand.cbAllowStudentsBreak;
-
-                                            if (stand.cbAllowStudentsJoin != undefined)
-                                                query.cbAllowStudentsJoin = stand.cbAllowStudentsJoin;
-
-                                            if (stand.cbAllowStudentsLeave != undefined)
-                                                query.cbAllowStudentsLeave = stand.cbAllowStudentsLeave;
-
-                                            if (stand.assigned != undefined)
-                                                query.assigned = stand.assigned;
-
-                                            req.db.collection('stands').updateOne({ "_id": mongo.ObjectID(stand.id) }, {
-                                                $set: query
-                                            }, function (err, resu) {
-                                                if (err) {
-                                                    res.status(400);
-                                                    res.send("Error when updating the stand!");
-                                                } else {
-                                                    if (resu.result.nModified > 0) {
-                                                        res.send(stand);
-                                                    } else {
-                                                        res.status(400);
-                                                        res.send("Error! Stand was not updated!");
-                                                    }
+                                                if (stand.name != undefined) {
+                                                    query.name = stand.name;
                                                 }
-                                            });
+
+                                                if (stand.description != undefined)
+                                                    query.description = stand.description;
+
+                                                if (stand.deadlineDate != undefined)
+                                                    query.deadlineDate = stand.deadlineDate;
+
+                                                if (stand.time0910 != undefined)
+                                                    query.time0910 = stand.time0910;
+
+                                                if (stand.time1011 != undefined)
+                                                    query.time1011 = stand.time1011;
+
+                                                if (stand.time1112 != undefined)
+                                                    query.time1112 = stand.time1112;
+
+                                                if (stand.time1213 != undefined)
+                                                    query.time1213 = stand.time1213;
+
+                                                if (stand.time1314 != undefined)
+                                                    query.time1314 = stand.time1314;
+
+                                                if (stand.time1415 != undefined)
+                                                    query.time1415 = stand.time1415;
+
+                                                if (stand.time1516 != undefined)
+                                                    query.time1516 = stand.time1516;
+
+                                                if (stand.cbAllowStudentsBreak != undefined)
+                                                    query.cbAllowStudentsBreak = stand.cbAllowStudentsBreak;
+
+                                                if (stand.cbAllowStudentsJoin != undefined)
+                                                    query.cbAllowStudentsJoin = stand.cbAllowStudentsJoin;
+
+                                                if (stand.cbAllowStudentsLeave != undefined)
+                                                    query.cbAllowStudentsLeave = stand.cbAllowStudentsLeave;
+
+                                                if (stand.assigned != undefined)
+                                                    query.assigned = stand.assigned;
+
+                                                req.db.collection('stands').updateOne({ "_id": mongo.ObjectID(stand.id) }, {
+                                                    $set: query
+                                                }, function (err, resu) {
+                                                    if (err) {
+                                                        res.status(400);
+                                                        res.send("Error when updating the stand!");
+                                                    } else {
+                                                        if (resu.result.nModified > 0) {
+                                                            res.send(stand);
+                                                        } else {
+                                                            res.status(400);
+                                                            res.send("Error! Stand was not updated!");
+                                                        }
+                                                    }
+                                                });
+                                            //} else {
+                                            //    res.status(400);
+                                            //    res.send("Stand cant be edited because the deadline has passed!");
+                                            //}
                                         } else {
                                             res.status(404);
                                             res.send("No Stand with this ID exists!");
@@ -420,82 +432,92 @@ router.put('/:id/user', function (req, res, next) {
         req.db.collection('users').find({ uuid: uuid }).toArray(function (err, doc) {
             if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
                 var cat = doc[0].category;
-                if (cat == "teacher" || cat == "admin") {
                     try {
                         standID = new mongo.ObjectID(standID);
                         req.db.collection('stands').find({ _id: standID }).toArray(function (err, docu) {
                             if (typeof docu != undefined && docu.length > 0 && typeof docu[0] != undefined) {
-                                docu[0].id = docu[0]._id;
-                                try {
-                                    var userID = new mongo.ObjectID(usID);
-                                    req.db.collection('users').find({ _id: userID }).toArray(function (err, docum) {
-                                        if (typeof docum != undefined && docum.length > 0 && typeof docum[0] != undefined) {
+                                //if docu[0].deadlineDate != today/before today
+                                if (cat == "teacher" || cat == "admin" || (cat == "student" && docu[0].cbAllowStudentsJoin)) {
+                                    docu[0].id = docu[0]._id;
+                                    try {
+                                        var userID = new mongo.ObjectID(usID);
+                                        if (usID + "" == doc[0]._id + "" && cat == "student") {
+                                            req.db.collection('users').find({ _id: userID }).toArray(function (err, docum) {
+                                                if (typeof docum != undefined && docum.length > 0 && typeof docum[0] != undefined) {
 
-                                            if (docum[0].category == "student") {
-                                                for (var key in docu[0].students) {
-                                                    docu[0].students[key] = docu[0].students[key] + "";
-                                                }
-
-                                                if (docu[0].students != undefined) {
-                                                    if (docu[0].students.includes(userID + "")) {
-                                                        res.status(400);
-                                                        res.send("Student already in stand!");
-                                                    } else {
-                                                        req.db.collection('stands').updateOne({ _id: standID }, {
-                                                            $addToSet: {
-                                                                "students": userID
-                                                            }
-                                                        });
-
-                                                        if (!(req.user.id + "" == docum[0]._id + "") && (typeof (docum[0].settings) === 'undefined' || docum[0].settings.leaveStand)) {
-                                                            sendMsgToUser(req.db, req.user.id, docum[0]._id, "Standeinstellungen wurden geupdated");
+                                                    if (docum[0].category == "student") {
+                                                        for (var key in docu[0].students) {
+                                                            docu[0].students[key] = docu[0].students[key] + "";
                                                         }
 
-                                                        req.db.collection('stands').find({ _id: standID }).toArray(function (err, resu) {
-                                                            res.send(resu[0]);
-                                                        });
-                                                    }
-                                                }
-                                            } else {
-                                                if (docum[0].category == "teacher") {
-                                                    for (var key in docu[0].teachers) {
-                                                        docu[0].teachers[key] = docu[0].teachers[key] + "";
-                                                    }
+                                                        if (docu[0].students != undefined) {
+                                                            if (docu[0].students.includes(userID + "")) {
+                                                                res.status(400);
+                                                                res.send("Student already in stand!");
+                                                            } else {
+                                                                req.db.collection('stands').updateOne({ _id: standID }, {
+                                                                    $addToSet: {
+                                                                        "students": userID
+                                                                    }
+                                                                });
 
-                                                    if (docu[0].teachers != undefined) {
-                                                        if (docu[0].teachers.includes(userID + "")) {
-                                                            res.status(400);
-                                                            res.send("Teacher already in stand!");
-                                                        } else {
-                                                            req.db.collection('stands').updateOne({ _id: standID }, {
-                                                                $addToSet: {
-                                                                    "teachers": userID
+                                                                if (!(req.user.id + "" == docum[0]._id + "") && (typeof (docum[0].settings) === 'undefined' || docum[0].settings.leaveStand)) {
+                                                                    sendMsgToUser(req.db, req.user.id, docum[0]._id, "Standeinstellungen wurden geupdated");
                                                                 }
-                                                            });
 
-                                                            if (!(req.user.id + "" == docum[0]._id + "") && (typeof (docum[0].settings) === 'undefined' || docum[0].settings.leaveStand)) {
-                                                                sendMsgToUser(req.db, req.user.id, docum[0]._id, "Standeinstellungen wurden geupdated");
+                                                                req.db.collection('stands').find({ _id: standID }).toArray(function (err, resu) {
+                                                                    res.send(resu[0]);
+                                                                });
+                                                            }
+                                                        }
+                                                    } else {
+                                                        if (docum[0].category == "teacher") {
+                                                            for (var key in docu[0].teachers) {
+                                                                docu[0].teachers[key] = docu[0].teachers[key] + "";
                                                             }
 
-                                                            req.db.collection('stands').find({ _id: standID }).toArray(function (err, resu) {
-                                                                res.send(resu[0]);
-                                                            });
+                                                            if (docu[0].teachers != undefined) {
+                                                                if (docu[0].teachers.includes(userID + "")) {
+                                                                    res.status(400);
+                                                                    res.send("Teacher already in stand!");
+                                                                } else {
+                                                                    req.db.collection('stands').updateOne({ _id: standID }, {
+                                                                        $addToSet: {
+                                                                            "teachers": userID
+                                                                        }
+                                                                    });
+
+                                                                    if (!(req.user.id + "" == docum[0]._id + "") && (typeof (docum[0].settings) === 'undefined' || docum[0].settings.leaveStand)) {
+                                                                        sendMsgToUser(req.db, req.user.id, docum[0]._id, "Standeinstellungen wurden geupdated");
+                                                                    }
+
+                                                                    req.db.collection('stands').find({ _id: standID }).toArray(function (err, resu) {
+                                                                        res.send(resu[0]);
+                                                                    });
+                                                                }
+                                                            }
+                                                        } else {
+                                                            res.status(400);
+                                                            res.send("Only Teachers and Students can be added to a stand!");
                                                         }
                                                     }
-                                                } else {
-                                                    res.status(400);
-                                                    res.send("Only Teachers and Students can be added to a stand!");
                                                 }
-                                            }
+                                                else {
+                                                    res.status(404);
+                                                    res.send("This user does not exist!");
+                                                }
+                                            });
+                                        } else {
+                                            res.status(403);
+                                            res.send("If you are a student, you can only add yourself to a stand!");
                                         }
-                                        else {
-                                            res.status(404);
-                                            res.send("This user does not exist!");
-                                        }
-                                    });
-                                } catch (err) {
-                                    res.status(400);
-                                    res.send("Invalid User ID! " + err.message);
+                                    } catch (err) {
+                                        res.status(400);
+                                        res.send("Invalid User ID! " + err.message);
+                                    }
+                                } else {
+                                    res.status(403);
+                                    res.send("Unauthorized to add someone to a stand!");
                                 }
                             }
                             else {
@@ -507,11 +529,6 @@ router.put('/:id/user', function (req, res, next) {
                         res.status(400);
                         res.send("Invalid Stand ID! " + err.message);
                     }
-                }
-                else {
-                    res.status(403);
-                    res.send("Unauthorized to add someone to a stand!");
-                }
             } else {
                 res.status(401);
                 res.send("You need to be logged in to use this feature!");
@@ -597,14 +614,15 @@ router.delete('/:id/user',function (req, res, next) {
         req.db.collection('users').find({ uuid: uuid }).toArray(function (err, doc) {
             if (typeof doc != undefined && doc.length > 0 && typeof doc[0] != undefined) {
                 var cat = doc[0].category;
-                if (cat == "teacher" || cat == "admin") {
                     try {
                         standID = new mongo.ObjectID(standID);
                         req.db.collection('stands').find({ _id: standID }).toArray(function (err, docu) {
                             if (typeof docu != undefined && docu.length > 0 && typeof docu[0] != undefined) {
+                                if (cat == "teacher" || cat == "admin" || (cat == "student" && docu[0].cbAllowStudentsLeave)) {
                                 docu[0].id = docu[0]._id;
                                 try {
                                     var userID = new mongo.ObjectID(usID);
+                                    if (usID + "" == doc[0]._id + "" && cat == "student") {
                                     req.db.collection('users').find({ _id: userID }).toArray(function (err, docum) {
                                         if (typeof docum != undefined && docum.length > 0 && typeof docum[0] != undefined) {
 
@@ -676,26 +694,29 @@ router.delete('/:id/user',function (req, res, next) {
                                             res.status(404);
                                             res.send("This User does not exist!");
                                         }
-                                    });
+                                        });
+                                    } else {
+                                        res.status(403);
+                                        res.send("If you are a student, you can only add yourself to a stand!");
+                                    }
                                 } catch (err) {
                                     res.status(400);
                                     res.send("Invalid User ID! " + err.message);
+                                }
+                                } else {
+                                    res.status(403);
+                                    res.send("Unauthorized to remove a User from a stand!");
                                 }
                             }
                             else {
                                 res.status(404);
                                 res.send("This stand does not exist!");
                             }
-                        });
+                            });
                     } catch (err) {
                         res.status(400);
                         res.send("Invalid Stand ID! " + err.message);
                     }
-                }
-                else {
-                    res.status(403);
-                    res.send("Unauthorized to remove a User from a stand!");
-                }
             } else {
                 res.status(401);
                 res.send("You need to be logged in to use this feature!");
