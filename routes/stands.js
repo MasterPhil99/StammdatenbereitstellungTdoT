@@ -437,11 +437,14 @@ router.put('/:id/user', function (req, res, next) {
                         req.db.collection('stands').find({ _id: standID }).toArray(function (err, docu) {
                             if (typeof docu != undefined && docu.length > 0 && typeof docu[0] != undefined) {
                                 //if docu[0].deadlineDate != today/before today
+								console.log(cat);
+								console.log(cat == "teacher" || cat == "admin" || (cat == "student" && docu[0].cbAllowStudentsJoin));
                                 if (cat == "teacher" || cat == "admin" || (cat == "student" && docu[0].cbAllowStudentsJoin)) {
                                     docu[0].id = docu[0]._id;
                                     try {
                                         var userID = new mongo.ObjectID(usID);
-                                        if (usID + "" == doc[0]._id + "" && cat == "student") {
+										console.log(usID + "" == doc[0]._id + "" && cat == "student");
+                                        if ((usID + "" == doc[0]._id + "" && cat == "student") || cat == "teacher" || cat == "admin") {
                                             req.db.collection('users').find({ _id: userID }).toArray(function (err, docum) {
                                                 if (typeof docum != undefined && docum.length > 0 && typeof docum[0] != undefined) {
 

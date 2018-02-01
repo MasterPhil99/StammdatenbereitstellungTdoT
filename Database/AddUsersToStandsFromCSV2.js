@@ -42,18 +42,18 @@ function recUpdate(data, index, db) {
 	console.log("recUpdate" + index);
 		var pupil = data[index].split(';');
 		//console.log(pupil);
-		if(pupil[4] != 'Unterricht' && pupil[4] != 'frei gestellt' && pupil[4] != 'abgemeldet' && pupil[4] != 'Guide') {
+		if(pupil[5] != 'Unterricht' && pupil[5] != 'frei gestellt' && pupil[5] != 'abgemeldet' && pupil[5] != 'Guide') {
 			console.log(index + " . student");
 			db.collection('users').findOne({ username: pupil[0] }, function(err, result) {
 				//console.log(result);
 				if(result != null) {
-					db.collection('stands').updateOne( { name: pupil[4] }, { $push: { students: result._id }}, function(err, res){
+					db.collection('stands').updateOne( { name: pupil[5] }, { $push: { students: result._id }}, function(err, res){
 						index++;
 						//console.log(data);
 						//console.log(data[index]);
 						//console.log(index);
 						recUpdate(data, index, db);
-						console.log('Student ' + result.username + ' was added to stand ' + pupil[4] + ' !');
+						console.log('Student ' + result.username + ' was added to stand ' + pupil[5] + ' !');
 					});
 				}
 			});

@@ -17,11 +17,11 @@ if (file){
         for(var line of data.split('\r\n')){
           if (line != ""){
             var pupil = line.split(';');
-			if(pupil[4] != 'Unterricht' && pupil[4] != 'abgemeldet' && pupil[4] != 'frei gestellt') {
+			if(pupil[4] != 'Unterricht' && pupil[4] != 'abgemeldet' && pupil[4] != 'frei gestellt' && pupil[4] != 'Guide') {
 				standNames.push(pupil[4]);
 			}
 			
-			if(pupil[5] != 'Unterricht' && pupil[5] != 'abgemeldet' && pupil[5] != 'frei gestellt') {
+			if(pupil[5] != 'Unterricht' && pupil[5] != 'abgemeldet' && pupil[5] != 'frei gestellt' && pupil[4] != 'Guide') {
 				standNames.push(pupil[5]);
 			}
           }
