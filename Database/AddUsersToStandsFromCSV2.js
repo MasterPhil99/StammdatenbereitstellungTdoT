@@ -2,7 +2,7 @@ var fs = require('fs');
 var MongoClient = require('mongodb').MongoClient;
 
 var usage = "node \"'InsertFromCSV'.js\" [file to load students from]";
-var file = "./BenutzerListe.csv"; //process.argv[2];
+var file = "./Benutzerliste.csv"; //process.argv[2];
 
 if (file){
   MongoClient.connect('mongodb://127.0.0.1:27017/pupilmgmt', (err, database) => {
